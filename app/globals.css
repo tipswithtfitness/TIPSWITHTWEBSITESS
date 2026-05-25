@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+@keyframes slamIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-100vw) skewX(-20deg);
+    filter: blur(10px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateX(30px) skewX(10deg);
+    filter: blur(0px);
+  }
+
+  100% {
+    transform: translateX(0px) skewX(0deg);
+  }
+}
+
+.slogan-text {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  text-transform: uppercase;
+  animation: slamIn 1.2s ease-out forwards;
+
+  text-shadow: 0 0 10px orange, 0 0 20px red, 0 0 40px red;
+
+  letter-spacing: 3px;
+}
