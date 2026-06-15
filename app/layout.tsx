@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Tips With T",
   description: "Training, sprinting, fitness, and performance coaching.",
+  icons: {
+    icon: "/icon.png?v=2",
+  },
 };
 
 export default function RootLayout({
