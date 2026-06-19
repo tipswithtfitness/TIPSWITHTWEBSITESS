@@ -255,7 +255,7 @@ export default function LessonsPage() {
     </div>
   );
 
-  const emailSubject = `${firstName} ${lastInitial}. - ${confirmedService}`;
+  const emailSubject = `Tips With T Intake - ${firstName} ${lastInitial}. - ${confirmedService}`;
 
   // BUILDS THE EMAIL THAT GETS SENT TO YOU
   const createEmailBody = (codeForSubmission: string) => `
