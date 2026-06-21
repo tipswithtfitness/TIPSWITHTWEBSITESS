@@ -130,6 +130,19 @@ export default function Home() {
           </h2>
         </footer>
       </div>
+      {/* =============================
+          COACH DASHBOARD QUICK ACCESS
+          Small private-looking lightning button for Coach T.
+          This links to /coach without making it obvious or loud.
+      ============================= */}
+      <button
+        onClick={() => (window.location.href = "/coach")}
+        aria-label="Coach dashboard"
+        title="Coach dashboard"
+        className="fixed bottom-5 left-5 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/35 text-sky-100/70 shadow-[0_10px_35px_rgba(14,165,233,0.14)] backdrop-blur-md transition hover:border-sky-100/35 hover:bg-sky-100/10 hover:text-sky-100"
+      >
+        ⚡
+      </button>
     </main>
   );
 }

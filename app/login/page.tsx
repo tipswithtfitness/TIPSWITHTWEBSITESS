@@ -72,6 +72,54 @@ export default function LoginPage() {
   const [hasUnsavedProfileChanges, setHasUnsavedProfileChanges] =
     useState(false);
   const [profileNotice, setProfileNotice] = useState("");
+  // =============================
+  // PROFILE PHOTO UPLOAD STATE
+  // Tracks when the athlete is uploading a new profile picture.
+  // =============================
+  const [photoUploading, setPhotoUploading] = useState(false);
+  // =============================
+  // UPLOAD PROFILE PHOTO
+  // Lets the athlete click their profile circle and upload a picture.
+  // The photo URL is saved in the background, but never shown as a form field.
+  // =============================
+  const uploadProfilePhoto = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!athlete || !file) {
+      return;
+    }
+
+    setPhotoUploading(true);
+    setProfileNotice("");
+
+    try {
+      const formData = new FormData();
+      formData.append("athleteId", athlete.id);
+      formData.append("file", file);
+
+      const response = await fetch("/api/profile-photo", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setProfileNotice(result.error || "Could not upload profile photo.");
+        return;
+      }
+
+      setAthlete(result.athlete);
+      setProfileNotice("Profile photo updated.");
+    } catch {
+      setProfileNotice("Could not upload profile photo.");
+    } finally {
+      setPhotoUploading(false);
+      event.target.value = "";
+    }
+  };
   const [isWelcomeLoading, setIsWelcomeLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -378,19 +426,34 @@ export default function LoginPage() {
 
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-5">
-                <div className="h-24 w-24 overflow-hidden rounded-full border border-sky-100/30 bg-sky-100/10 shadow-[0_0_35px_rgba(125,211,252,0.25)]">
+                {/* =============================
+                    CLICKABLE PROFILE PHOTO
+                    Athlete clicks the circle to choose a photo.
+                    No profile photo URL field is shown to the athlete.
+                ============================= */}
+                <label className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-sky-100/30 bg-sky-100/10 text-3xl font-black text-sky-100 shadow-[0_0_35px_rgba(125,211,252,0.25)] transition hover:border-sky-100 hover:bg-sky-100/20">
                   {athlete.profile_photo_url ? (
                     <img
                       src={athlete.profile_photo_url}
-                      alt="Athlete profile"
+                      alt="Profile"
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-3xl font-black text-sky-100">
-                      {(athlete.first_name || "A").slice(0, 1)}
-                    </div>
+                    <span>{(athlete.first_name || "A").slice(0, 1)}</span>
                   )}
-                </div>
+
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-center text-xs font-bold uppercase tracking-[0.16em] text-white opacity-0 transition group-hover:opacity-100">
+                    {photoUploading ? "Uploading..." : "Change Photo"}
+                  </span>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={uploadProfilePhoto}
+                    disabled={photoUploading}
+                    className="hidden"
+                  />
+                </label>
 
                 <div>
                   <p className="text-xs uppercase tracking-[0.35em] text-sky-100/60">
@@ -545,15 +608,6 @@ export default function LoginPage() {
                   )}
 
                   <div className="grid gap-5 md:grid-cols-2">
-                    <input
-                      placeholder="Profile photo URL"
-                      value={athlete.profile_photo_url || ""}
-                      onChange={(e) =>
-                        updateProfileField("profile_photo_url", e.target.value)
-                      }
-                      className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 outline-none placeholder:text-white/35 focus:border-sky-200"
-                    />
-
                     <input
                       placeholder="Sport"
                       value={athlete.sport || ""}
@@ -820,15 +874,12 @@ export default function LoginPage() {
         </p>
 
         <form
-
           className="mt-8 space-y-5"
           onSubmit={(event) => {
             event.preventDefault();
             if (!loading) handleLogin();
           }}
-        
         >
-          
           <input
             type="email"
             placeholder="Example: demo@tipswitht.com"
