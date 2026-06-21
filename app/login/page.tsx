@@ -822,7 +822,7 @@ export default function LoginPage() {
         <form
 
           className="mt-8 space-y-5"
-          onSubmit={(handleSubmit) => {
+          onSubmit={(event) => {
             event.preventDefault();
             if (!loading) handleLogin();
           }}
