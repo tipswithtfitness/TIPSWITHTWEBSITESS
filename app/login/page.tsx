@@ -130,6 +130,16 @@ export default function LoginPage() {
       return;
     }
 
+    // =============================
+    // LAST LOGIN TRACKER
+    // This updates Supabase every time an athlete logs in successfully.
+    // Later, this helps us know who is active, inactive, or ready to archive.
+    // =============================
+    await supabase
+      .from("athletes")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", data.id);
+
     const { data: notesData } = await supabase
       .from("coach_notes")
       .select("*")
@@ -810,12 +820,15 @@ export default function LoginPage() {
         </p>
 
         <form
+
           className="mt-8 space-y-5"
-          onSubmit={(event) => {
+          onSubmit={(handleSubmit) => {
             event.preventDefault();
             if (!loading) handleLogin();
           }}
+        
         >
+          
           <input
             type="email"
             placeholder="Example: demo@tipswitht.com"

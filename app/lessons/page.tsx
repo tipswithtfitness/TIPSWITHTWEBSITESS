@@ -312,36 +312,29 @@ Meeting note:
 Initial Zoom meetings are expected to take 15-45 minutes depending on how much the client wants to share and how long it takes to find the right options.
 `;
 
+   // =============================
+  // ATHLETE INTAKE SUBMIT
+  // This sends the finished request to our private API route.
+  // The API route creates the athlete in Supabase automatically.
+  // =============================
   const handleSubmitRequest = async () => {
-    setIsSubmitting(true);
     setSubmitError("");
-
-    const codeForSubmission = athleteCode || generateAthleteCode();
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("/api/intake", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
-          access_key: "43177f8a-72d6-4d12-b016-bca15f4f57e6",
-          subject: emailSubject,
-          from_name: "Tips With T Website",
-          name: `${firstName} ${lastInitial}.`,
-          email: clientEmail,
-          replyto: clientEmail,
-          recipient_email: "tipswitht.fitness@gmail.com",
-          message: createEmailBody(codeForSubmission),
+          name: `${firstName.trim()} ${lastInitial.trim()}`.trim(),
+          email: clientEmail.trim(),
           category: confirmedService,
           journey: confirmedJourney,
           about: aboutText,
           special_event: preparingEvent,
-          event_details:
-            preparingEvent === "Yes"
-              ? eventDetails || "No details provided."
-              : "None",
+          event_details: eventDetails,
           body_weight: bodyWeight,
           is_sprinter: isSprinter,
           max_squat: maxSquat,
@@ -350,16 +343,23 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           personal_records: personalRecords,
           training_period: trainingPeriodAnswer,
           pricing_option: selectedPricingOption,
-          athlete_code: codeForSubmission,
           preferred_zoom_date: meetingDate,
           preferred_zoom_time: meetingTime,
+
+          // Hidden bot field. Real people leave this blank.
+          website: "",
         }),
       });
 
       const result = await response.json();
 
+      if (!response.ok) {
+        setSubmitError(result.error || "Something went wrong. Please try again.");
+        return;
+      }
+
       if (result.success) {
-        setAthleteCode(codeForSubmission);
+        setAthleteCode(result.athleteCode);
         setSubmitted(true);
       } else {
         setSubmitError("Something went wrong. Please try again.");
@@ -529,7 +529,18 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 placeholder="First name"
                 className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-white"
               />
-
+              {/* =============================
+                  BOT PROTECTION FIELD
+                  Real people will never see this.
+                  If a bot fills it out, the API blocks the submission.
+              ============================= */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden"
+              />
               <input
                 value={lastInitial}
                 onChange={(e) =>
