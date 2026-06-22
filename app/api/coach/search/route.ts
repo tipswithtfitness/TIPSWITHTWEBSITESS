@@ -5,6 +5,8 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const allowedStatuses = ["active", "inactive", "archived", "all"];
+
 function isCoach(password: string) {
   return password && password === process.env.COACH_DASHBOARD_PASSWORD;
 }
@@ -14,25 +16,31 @@ export async function POST(request: Request) {
     const body = await request.json();
     const password = body.password || "";
     const search = body.search?.trim() || "";
+    const status = allowedStatuses.includes(body.status)
+      ? body.status
+      : "active";
 
     if (!isCoach(password)) {
       return Response.json({ error: "Not allowed." }, { status: 401 });
     }
 
-    if (!search) {
-      return Response.json({ error: "Search is required." }, { status: 400 });
+    let query = supabaseAdmin.from("athletes").select("*");
+
+    if (status !== "all") {
+      query = query.eq("status", status);
     }
 
-    const safeSearch = search.replaceAll(",", "").replaceAll("%", "");
-    const searchPattern = `%${safeSearch}%`;
+    if (search) {
+      const safeSearch = search.replaceAll(",", "").replaceAll("%", "");
 
-    const { data: athletes, error } = await supabaseAdmin
-      .from("athletes")
-      .select("*")
-      .or(
-        `athlete_code.ilike.${searchPattern},email.ilike.${searchPattern},first_name.ilike.${searchPattern}`
-      )
-      .limit(10);
+      query = query.or(
+        `athlete_code.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,first_name.ilike.%${safeSearch}%`
+      );
+    }
+
+    const { data: athletes, error } = await query
+      .order("first_name", { ascending: true })
+      .limit(25);
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
@@ -40,7 +48,7 @@ export async function POST(request: Request) {
 
     return Response.json({
       success: true,
-      athletes,
+      athletes: athletes || [],
     });
   } catch {
     return Response.json(

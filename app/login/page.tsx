@@ -61,6 +61,11 @@ function getTodayLabel() {
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [athleteCode, setAthleteCode] = useState("");
+  // ==============================
+  // REMEMBER LOGIN STATE
+  // Keeps the athlete logged in on this device after a successful login.
+  // ==============================
+  const [rememberLogin, setRememberLogin] = useState(true);
   const [athlete, setAthlete] = useState<any>(null);
   const [pendingAthlete, setPendingAthlete] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Training");
@@ -159,23 +164,40 @@ export default function LoginPage() {
 
   // ==============================
   // HANDLE ATHLETE LOGIN
-  // Works from clicking the button OR pressing Enter/Return.
+  // Works from clicking the button, pressing Enter/Return, or saved login.
   // ==============================
-  const handleLogin = async () => {
+  const handleLogin = async (
+    savedEmail?: string,
+    savedAthleteCode?: string
+  ) => {
     setLoading(true);
     setError("");
+
+    const loginEmail = (savedEmail || email).trim().toLowerCase();
+    const loginCode = (savedAthleteCode || athleteCode).trim().toUpperCase();
 
     const { data, error } = await supabase
       .from("athletes")
       .select("*")
-      .eq("email", email.trim().toLowerCase())
-      .eq("athlete_code", athleteCode.trim().toUpperCase())
+      .eq("email", loginEmail)
+      .eq("athlete_code", loginCode)
       .single();
 
     if (error || !data) {
       setError("No athlete found with that email and athlete code.");
       setLoading(false);
+      window.localStorage.removeItem("tipsWithT-athlete-login");
       return;
+    }
+
+    if (rememberLogin) {
+      window.localStorage.setItem(
+        "tipsWithT-athlete-login",
+        JSON.stringify({
+          email: loginEmail,
+          athleteCode: loginCode,
+        })
+      );
     }
 
     // =============================
@@ -211,6 +233,31 @@ export default function LoginPage() {
 
     setIsWelcomeLoading(true);
   };
+
+  // ==============================
+  // AUTO LOGIN SAVED ATHLETE
+  // If this device has a saved athlete login, open the dashboard automatically.
+  // ==============================
+  useEffect(() => {
+    const savedLogin = window.localStorage.getItem("tipsWithT-athlete-login");
+
+    if (!savedLogin) return;
+
+    try {
+      const parsedLogin = JSON.parse(savedLogin);
+
+      if (parsedLogin.email && parsedLogin.athleteCode) {
+        setEmail(parsedLogin.email);
+        setAthleteCode(parsedLogin.athleteCode);
+
+        window.setTimeout(() => {
+          handleLogin(parsedLogin.email, parsedLogin.athleteCode);
+        }, 250);
+      }
+    } catch {
+      window.localStorage.removeItem("tipsWithT-athlete-login");
+    }
+  }, []);
 
   // ==============================
   // CHANGE TABS SAFELY
@@ -481,6 +528,7 @@ export default function LoginPage() {
 
                 <button
                   onClick={() => {
+                    window.localStorage.removeItem("tipsWithT-athlete-login");
                     setAthlete(null);
                     window.location.href = "/";
                   }}
@@ -895,6 +943,20 @@ export default function LoginPage() {
             onChange={(e) => setAthleteCode(e.target.value.toUpperCase())}
             className="w-full rounded-2xl border border-white/15 bg-white/10 px-5 py-4 tracking-[0.12em] outline-none placeholder:text-white/35 focus:border-sky-200"
           />
+
+          {/* ==============================
+              REMEMBER LOGIN OPTION
+              Keeps this athlete logged in on this device.
+          ============================== */}
+          <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65">
+            <input
+              type="checkbox"
+              checked={rememberLogin}
+              onChange={(event) => setRememberLogin(event.target.checked)}
+              className="h-4 w-4"
+            />
+            Remember me on this device
+          </label>
 
           <p className="text-sm text-white/45">
             Include the hyphens exactly like your code shows.

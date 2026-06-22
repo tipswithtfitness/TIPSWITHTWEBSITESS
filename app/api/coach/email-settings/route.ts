@@ -14,28 +14,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const password = body.password || "";
     const athleteId = body.athleteId || "";
-    const note = body.note?.trim() || "";
+    const emailNotificationsEnabled = Boolean(body.emailNotificationsEnabled);
 
     if (!isCoach(password)) {
       return Response.json({ error: "Not allowed." }, { status: 401 });
     }
 
-    if (!athleteId || !note) {
-      return Response.json(
-        { error: "Athlete and note are required." },
-        { status: 400 }
-      );
+    if (!athleteId) {
+      return Response.json({ error: "Athlete is required." }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin
-      .from("coach_notes")
-      .insert({
-        athlete_id: athleteId,
-        coach_name: "Coach T",
-        note,
-        note_date: new Date().toISOString().slice(0, 10),
-        is_pinned: false,
+      .from("athletes")
+      .update({
+        email_notifications_enabled: emailNotificationsEnabled,
       })
+      .eq("id", athleteId)
       .select()
       .single();
 
@@ -45,11 +39,11 @@ export async function POST(request: Request) {
 
     return Response.json({
       success: true,
-      note: data,
+      athlete: data,
     });
   } catch {
     return Response.json(
-      { error: "Something went wrong posting the note." },
+      { error: "Something went wrong updating email settings." },
       { status: 500 }
     );
   }

@@ -18,12 +18,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-async function sendTrainingWeekEmail(
-  athlete: any,
-  weekNumber: number,
-  title: string,
-  focus: string
-) {
+async function sendCoachNoteEmail(athlete: any, note: string) {
   if (!athlete.email) return;
 
   await fetch("https://api.resend.com/emails", {
@@ -35,22 +30,17 @@ async function sendTrainingWeekEmail(
     body: JSON.stringify({
       from: "Tips With T <coach@mail.tipswitht.com>",
       to: athlete.email,
-      subject: `Week ${weekNumber} training plan is ready`,
+      subject: "New coach note from Tips With T",
       html: `
         <div style="font-family: Arial, sans-serif; background: #020713; color: #ffffff; padding: 32px;">
           <div style="max-width: 560px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.18); border-radius: 24px; padding: 28px; background: rgba(255,255,255,0.06);">
             <p style="letter-spacing: 4px; color: #bae6fd; font-size: 12px;">TIPS WITH T</p>
-            <h1 style="font-size: 30px; margin: 0 0 12px;">Week ${weekNumber} is ready</h1>
+            <h1 style="font-size: 30px; margin: 0 0 12px;">New coach note</h1>
             <p style="color: #d1d5db; line-height: 1.7; font-size: 16px;">
-              Hey ${escapeHtml(athlete.first_name || "there")}, Coach T added or updated your Week ${weekNumber} training plan.
+              Hey ${escapeHtml(athlete.first_name || "there")}, Coach T added a new note to your dashboard.
             </p>
             <div style="margin: 24px 0; padding: 18px; border-radius: 18px; background: rgba(224,242,254,0.10); border: 1px solid rgba(186,230,253,0.25); color: #e5e7eb; line-height: 1.7;">
-              <strong>${escapeHtml(title)}</strong>
-              ${
-                focus
-                  ? `<br /><span style="color: #cbd5e1;">${escapeHtml(focus)}</span>`
-                  : ""
-              }
+              ${escapeHtml(note)}
             </div>
             <a href="https://tipswitht.com/login" style="display: inline-block; border-radius: 999px; background: #e0f2fe; color: #000000; padding: 14px 22px; font-weight: 800; letter-spacing: 2px; text-decoration: none;">
               OPEN DASHBOARD
@@ -67,19 +57,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const password = body.password || "";
     const athleteId = body.athleteId || "";
-    const weekNumber = Number(body.weekNumber);
-    const title = body.title?.trim() || "";
-    const focus = body.focus?.trim() || "";
-    const plan = body.plan?.trim() || "";
+    const note = body.note?.trim() || "";
     const notifyAthlete = body.notifyAthlete !== false;
 
     if (!isCoach(password)) {
       return Response.json({ error: "Not allowed." }, { status: 401 });
     }
 
-    if (!athleteId || !weekNumber || !title || !plan) {
+    if (!athleteId || !note) {
       return Response.json(
-        { error: "Athlete, week number, title, and plan are required." },
+        { error: "Athlete and note are required." },
         { status: 400 }
       );
     }
@@ -95,20 +82,14 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await supabaseAdmin
-      .from("training_weeks")
-      .upsert(
-        {
-          athlete_id: athleteId,
-          week_number: weekNumber,
-          title,
-          focus,
-          plan,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "athlete_id,week_number",
-        }
-      )
+      .from("coach_notes")
+      .insert({
+        athlete_id: athleteId,
+        coach_name: "Coach T",
+        note,
+        note_date: new Date().toISOString().slice(0, 10),
+        is_pinned: false,
+      })
       .select()
       .single();
 
@@ -117,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     if (notifyAthlete && athlete.email_notifications_enabled !== false) {
-      await sendTrainingWeekEmail(athlete, weekNumber, title, focus);
+      await sendCoachNoteEmail(athlete, note);
 
       await supabaseAdmin
         .from("athletes")
@@ -129,13 +110,13 @@ export async function POST(request: Request) {
 
     return Response.json({
       success: true,
-      trainingWeek: data,
+      note: data,
       notified: notifyAthlete,
       notificationsEnabled: athlete.email_notifications_enabled !== false,
     });
   } catch {
     return Response.json(
-      { error: "Something went wrong saving the training week." },
+      { error: "Something went wrong posting the note." },
       { status: 500 }
     );
   }
