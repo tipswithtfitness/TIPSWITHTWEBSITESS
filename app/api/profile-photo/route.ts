@@ -6,6 +6,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxProfilePhotoBytes = 5 * 1024 * 1024;
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -20,11 +23,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "Photo is required." }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return Response.json({ error: "Please choose an image file." }, { status: 400 });
+    if (!allowedImageTypes.includes(file.type)) {
+      return Response.json(
+        { error: "Please choose a JPG, PNG, or WebP image." },
+        { status: 400 }
+      );
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > maxProfilePhotoBytes) {
       return Response.json(
         { error: "Please choose an image smaller than 5 MB." },
         { status: 400 }

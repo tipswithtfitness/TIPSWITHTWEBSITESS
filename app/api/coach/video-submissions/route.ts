@@ -5,61 +5,33 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function sendCoachVideoEmail(athlete: any, title: string, videoUrl: string) {
-  if (!process.env.RESEND_API_KEY || !process.env.COACH_NOTIFICATION_EMAIL) {
+const maxVideoFileSizeMb = 200;
+const maxVideoTitleChars = 120;
+const maxVideoNotesChars = 1200;
+
+function isCoach(password: string) {
+  return password && password === process.env.COACH_DASHBOARD_PASSWORD;
+}
+
+function isGoogleDriveLink(value: string) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      (host === "drive.google.com" || host === "docs.google.com")
+    );
+  } catch {
     return false;
   }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "Tips With T <coach@mail.tipswitht.com>",
-      to: process.env.COACH_NOTIFICATION_EMAIL,
-      subject: `New video from ${athlete.first_name || "an athlete"}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; background: #020713; color: #ffffff; padding: 32px;">
-          <div style="max-width: 560px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.18); border-radius: 24px; padding: 28px; background: rgba(255,255,255,0.06);">
-            <p style="letter-spacing: 4px; color: #bae6fd; font-size: 12px;">TIPS WITH T</p>
-            <h1 style="font-size: 28px; margin: 0 0 12px;">New video submission</h1>
-            <p style="color: #d1d5db; line-height: 1.7;">
-              ${athlete.first_name || "An athlete"} ${athlete.last_initial || ""} submitted: ${title}
-            </p>
-            <p style="color: #bae6fd;">${athlete.athlete_code || ""}</p>
-            <a href="${videoUrl}" style="display: inline-block; margin-top: 18px; border-radius: 999px; background: #e0f2fe; color: #000000; padding: 14px 22px; font-weight: 800; letter-spacing: 2px; text-decoration: none;">
-              OPEN VIDEO
-            </a>
-          </div>
-        </div>
-      `,
-    }),
-  });
-
-  return response.ok;
 }
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      return Response.json(
-        { error: "Missing NEXT_PUBLIC_SUPABASE_URL." },
-        { status: 500 }
-      );
-    }
-
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return Response.json(
-        { error: "Missing SUPABASE_SERVICE_ROLE_KEY." },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
-    const email = body.email?.trim().toLowerCase() || "";
-    const athleteCode = body.athleteCode?.trim() || "";
+    const password = body.password || "";
+    const athleteId = body.athleteId || "";
     const title = body.title?.trim() || "";
     const videoUrl = body.videoUrl?.trim() || "";
     const athleteNotes = body.athleteNotes || "";
@@ -67,17 +39,29 @@ export async function POST(request: Request) {
       body.fileSizeMb === "" || body.fileSizeMb === null
         ? null
         : Number(body.fileSizeMb);
+    const status = body.status || "submitted";
 
-    if (!email || !athleteCode) {
+    if (!isCoach(password)) {
+      return Response.json({ error: "Not allowed." }, { status: 401 });
+    }
+
+    if (!athleteId || !title || !videoUrl) {
       return Response.json(
-        { error: "Email and athlete code are missing from this login session." },
+        { error: "Athlete, title, and video link are required." },
         { status: 400 }
       );
     }
 
-    if (!title || !videoUrl) {
+    if (title.length > maxVideoTitleChars) {
       return Response.json(
-        { error: "Video title and link are required." },
+        { error: `Keep video titles under ${maxVideoTitleChars} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (athleteNotes.length > maxVideoNotesChars) {
+      return Response.json(
+        { error: `Keep video notes under ${maxVideoNotesChars} characters.` },
         { status: 400 }
       );
     }
@@ -89,72 +73,56 @@ export async function POST(request: Request) {
       );
     }
 
-    if (fileSizeMb && fileSizeMb > 200) {
+    if (fileSizeMb !== null && fileSizeMb <= 0) {
       return Response.json(
-        { error: "Please keep video files under 200 MB." },
+        { error: "File size must be greater than 0 MB." },
         { status: 400 }
       );
     }
 
-    const { data: athlete, error: athleteError } = await supabaseAdmin
-      .from("athletes")
-      .select("*")
-      .eq("email", email)
-      .eq("athlete_code", athleteCode)
-      .single();
-
-    if (athleteError || !athlete) {
+    if (fileSizeMb && fileSizeMb > maxVideoFileSizeMb) {
       return Response.json(
         {
-          error:
-            athleteError?.message ||
-            "Could not find athlete from this email and athlete code.",
+          error: `Keep video files under ${maxVideoFileSizeMb} MB so the site stays affordable.`,
         },
-        { status: 404 }
+        { status: 400 }
       );
     }
 
-    const { data: video, error: videoError } = await supabaseAdmin
+    if (!isGoogleDriveLink(videoUrl)) {
+      return Response.json(
+        {
+          error:
+            "Use a Google Drive sharing link here. Keep the actual video file out of Supabase.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
       .from("video_submissions")
       .insert({
-        athlete_id: athlete.id,
+        athlete_id: athleteId,
         title,
         video_url: videoUrl,
         athlete_notes: athleteNotes,
-        file_size_mb: fileSizeMb,
-        status: "submitted",
+        file_size_mb: Number.isNaN(fileSizeMb) ? null : fileSizeMb,
+        status,
       })
       .select("*")
       .single();
 
-    if (videoError) {
-      return Response.json(
-        {
-          error: videoError.message,
-          details: videoError.details,
-          hint: videoError.hint,
-          code: videoError.code,
-        },
-        { status: 500 }
-      );
-    }
-
-    let emailed = false;
-
-    try {
-      emailed = await sendCoachVideoEmail(athlete, title, videoUrl);
-    } catch {
-      emailed = false;
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
     }
 
     return Response.json({
       success: true,
-      video,
-      emailed,
+      video: data,
     });
   } catch (error: any) {
     return Response.json(
-      { error: error?.message || "Could not submit video." },
+      { error: error?.message || "Could not save video submission." },
       { status: 500 }
     );
   }

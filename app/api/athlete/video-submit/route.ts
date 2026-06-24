@@ -6,6 +6,33 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const maxVideoFileSizeMb = 200;
+const maxVideoTitleChars = 120;
+const maxVideoNotesChars = 1200;
+
+function isGoogleDriveLink(value: string) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      (host === "drive.google.com" || host === "docs.google.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function escapeHtml(value: string) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 async function sendCoachVideoEmail(athlete: any, title: string, videoUrl: string) {
   if (!process.env.RESEND_API_KEY || !process.env.COACH_NOTIFICATION_EMAIL) {
     return false;
@@ -27,10 +54,10 @@ async function sendCoachVideoEmail(athlete: any, title: string, videoUrl: string
             <p style="letter-spacing: 4px; color: #bae6fd; font-size: 12px;">TIPS WITH T</p>
             <h1 style="font-size: 28px; margin: 0 0 12px;">New video submission</h1>
             <p style="color: #d1d5db; line-height: 1.7;">
-              ${athlete.first_name || "An athlete"} ${athlete.last_initial || ""} submitted: ${title}
+              ${escapeHtml(athlete.first_name || "An athlete")} ${escapeHtml(athlete.last_initial || "")} submitted: ${escapeHtml(title)}
             </p>
-            <p style="color: #bae6fd;">${athlete.athlete_code || ""}</p>
-            <a href="${videoUrl}" style="display: inline-block; margin-top: 18px; border-radius: 999px; background: #e0f2fe; color: #000000; padding: 14px 22px; font-weight: 800; letter-spacing: 2px; text-decoration: none;">
+            <p style="color: #bae6fd;">${escapeHtml(athlete.athlete_code || "")}</p>
+            <a href="${escapeHtml(videoUrl)}" style="display: inline-block; margin-top: 18px; border-radius: 999px; background: #e0f2fe; color: #000000; padding: 14px 22px; font-weight: 800; letter-spacing: 2px; text-decoration: none;">
               OPEN VIDEO
             </a>
           </div>
@@ -69,6 +96,20 @@ export async function POST(request: Request) {
       );
     }
 
+    if (title.length > maxVideoTitleChars) {
+      return Response.json(
+        { error: `Keep video titles under ${maxVideoTitleChars} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (athleteNotes.length > maxVideoNotesChars) {
+      return Response.json(
+        { error: `Keep video notes under ${maxVideoNotesChars} characters.` },
+        { status: 400 }
+      );
+    }
+
     if (Number.isNaN(fileSizeMb)) {
       return Response.json(
         { error: "File size must be a number, like 85 or 5.9." },
@@ -76,9 +117,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (fileSizeMb && fileSizeMb > 200) {
+    if (fileSizeMb !== null && fileSizeMb <= 0) {
       return Response.json(
-        { error: "Please keep video files under 200 MB." },
+        { error: "File size must be greater than 0 MB." },
+        { status: 400 }
+      );
+    }
+
+    if (fileSizeMb && fileSizeMb > maxVideoFileSizeMb) {
+      return Response.json(
+        {
+          error: `Please keep video files under ${maxVideoFileSizeMb} MB so the site stays affordable.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isGoogleDriveLink(videoUrl)) {
+      return Response.json(
+        {
+          error:
+            "Please upload the video to Google Drive and paste the Drive sharing link.",
+        },
         { status: 400 }
       );
     }

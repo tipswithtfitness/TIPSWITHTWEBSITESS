@@ -95,6 +95,7 @@ type CoachTab =
   | "athletes"
   | "training"
   | "videos"
+  | "studio"
   | "progress"
   | "messages"
   | "settings";
@@ -127,6 +128,33 @@ const weekdayDrafts = [
   coach_notes: "",
   sort_order: index + 1,
 }));
+
+const progressMetricPresets = [
+  {
+    type: "calories_burned",
+    label: "Calories burned",
+    unit: "calories",
+    helper: "Feeds calorie tables, line charts, column charts, and custom charts.",
+  },
+  {
+    type: "training_completed",
+    label: "Training completed",
+    unit: "workouts",
+    helper: "Feeds weekly completion tables and training progress charts.",
+  },
+  {
+    type: "weight_goal",
+    label: "Weight goal progress",
+    unit: "%",
+    helper: "Feeds the animated lava progress bar and weight goal charts.",
+  },
+  {
+    type: "video_reviews",
+    label: "Video reviews",
+    unit: "videos",
+    helper: "Feeds video review tables and video progress charts.",
+  },
+];
 
 export default function CoachDashboardPage() {
   const [password, setPassword] = useState("");
@@ -185,6 +213,9 @@ export default function CoachDashboardPage() {
   const [metricLabel, setMetricLabel] = useState("Calories burned");
   const [metricValue, setMetricValue] = useState("");
   const [metricUnit, setMetricUnit] = useState("calories");
+  const [metricEntryDate, setMetricEntryDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
   const [metricNotes, setMetricNotes] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -193,6 +224,7 @@ export default function CoachDashboardPage() {
   const [videoReviewDrafts, setVideoReviewDrafts] = useState<
     Record<string, VideoReviewDraft>
   >({});
+  const [studioVideoId, setStudioVideoId] = useState("");
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -408,6 +440,7 @@ export default function CoachDashboardPage() {
     setTrainingDays([]);
     setAthleteMetrics([]);
     setVideoSubmissions([]);
+    setStudioVideoId("");
     loadAthleteFile(athlete.id);
   };
 
@@ -791,6 +824,18 @@ export default function CoachDashboardPage() {
     }
   };
 
+  const applyMetricPreset = (presetType: string) => {
+    const preset = progressMetricPresets.find(
+      (option) => option.type === presetType
+    );
+
+    if (!preset) return;
+
+    setMetricType(preset.type);
+    setMetricLabel(preset.label);
+    setMetricUnit(preset.unit);
+  };
+
   const saveAthleteMetric = async () => {
     if (!selectedAthlete) {
       setMessage("Choose an athlete first.");
@@ -814,6 +859,7 @@ export default function CoachDashboardPage() {
         body: JSON.stringify({
           password,
           athleteId: selectedAthlete.id,
+          entryDate: metricEntryDate,
           metricType,
           metricLabel,
           metricValue,
@@ -1012,6 +1058,65 @@ export default function CoachDashboardPage() {
     }
   };
 
+  const notificationFeed = [
+    ...allVideoSubmissions.map((video) => ({
+      id: `video-${video.id}`,
+      kind: "video" as const,
+      rawId: video.id,
+      title: video.title || "Untitled video",
+      body: video.athlete_notes || "No athlete notes added.",
+      status: video.status || "submitted",
+      createdAt: video.created_at || "",
+      athlete: video.athletes,
+      actionLabel: "Review Video",
+      targetTab: "studio" as CoachTab,
+    })),
+    ...athleteQuestions.map((question) => ({
+      id: `question-${question.id}`,
+      kind: "question" as const,
+      rawId: question.id,
+      title: "Athlete Question",
+      body: question.question,
+      status: question.status || "new",
+      createdAt: question.created_at || "",
+      athlete: question.athletes,
+      actionLabel: "Reply",
+      targetTab: "messages" as CoachTab,
+    })),
+  ].sort(
+    (first, second) =>
+      new Date(second.createdAt).getTime() -
+      new Date(first.createdAt).getTime()
+  );
+
+  const openNotificationItem = (
+    athlete: Athlete | undefined,
+    targetTab: CoachTab,
+    rawId = ""
+  ) => {
+    if (!athlete) {
+      setMessage("This notification is missing an athlete connection.");
+      return;
+    }
+
+    chooseAthlete(athlete);
+    if (targetTab === "studio") {
+      setStudioVideoId(rawId);
+    }
+    setActiveCoachTab(targetTab);
+  };
+
+  const openReviewStudio = (video: VideoSubmission) => {
+    setStudioVideoId(video.id);
+    setActiveCoachTab("studio");
+  };
+
+  const studioVideo =
+    videoSubmissions.find((video) => video.id === studioVideoId) ||
+    videoSubmissions.find((video) => video.status === "submitted") ||
+    videoSubmissions[0] ||
+    null;
+
   return (
     <main className="min-h-screen bg-[#020713] px-6 py-10 text-white">
       <section className="mx-auto max-w-6xl">
@@ -1063,6 +1168,7 @@ export default function CoachDashboardPage() {
                 ["athletes", "Athletes"],
                 ["training", "Training"],
                 ["videos", "Videos"],
+                ["studio", "Studio"],
                 ["progress", "Progress"],
                 ["messages", "Messages"],
                 ["settings", "Settings"],
@@ -1112,9 +1218,11 @@ export default function CoachDashboardPage() {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100/55">
-                    Notification Bar
+                    Coach Inbox
                   </p>
-                  <h2 className="mt-2 text-2xl font-bold">Submissions</h2>
+                  <h2 className="mt-2 text-2xl font-bold">
+                    Notifications Center
+                  </h2>
                 </div>
 
                 <button
@@ -1127,128 +1235,121 @@ export default function CoachDashboardPage() {
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                    New Videos
-                  </p>
-                  <p className="mt-2 text-3xl font-black">
-                    {notificationCounts.newVideos}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                    Total Videos
-                  </p>
-                  <p className="mt-2 text-3xl font-black">
-                    {notificationCounts.totalVideos}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                    New Questions
-                  </p>
-                  <p className="mt-2 text-3xl font-black">
-                    {notificationCounts.newQuestions}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                    Total Questions
-                  </p>
-                  <p className="mt-2 text-3xl font-black">
-                    {notificationCounts.totalQuestions}
-                  </p>
-                </div>
+                {[
+                  ["New Videos", notificationCounts.newVideos],
+                  ["Total Videos", notificationCounts.totalVideos],
+                  ["New Questions", notificationCounts.newQuestions],
+                  ["Total Questions", notificationCounts.totalQuestions],
+                ].map(([label, count]) => (
+                  <div
+                    key={label}
+                    className="rounded-2xl border border-white/10 bg-black/25 p-4"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+                      {label}
+                    </p>
+                    <p className="mt-2 text-3xl font-black">{count}</p>
+                  </div>
+                ))}
               </div>
 
-              <div className="mt-5 grid gap-4 xl:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
-                    Latest Videos
+              <div className="mt-5 rounded-3xl border border-white/10 bg-black/20 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                      Newest First
+                    </p>
+                    <h3 className="mt-2 text-xl font-bold">
+                      Videos + Questions
+                    </h3>
+                  </div>
+                  <p className="text-sm text-white/45">
+                    {notificationFeed.length} active inbox item
+                    {notificationFeed.length === 1 ? "" : "s"}
                   </p>
+                </div>
 
-                  <div className="mt-3 space-y-3">
-                    {allVideoSubmissions.slice(0, 4).length ? (
-                      allVideoSubmissions.slice(0, 4).map((video) => (
-                        <button
-                          key={video.id}
-                          onClick={() => {
-                            if (video.athletes) {
-                              chooseAthlete(video.athletes);
-                              setActiveCoachTab("videos");
-                            }
-                          }}
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-sky-100/30 hover:bg-sky-100/10"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sky-100/25 bg-sky-100/10 font-bold text-sky-100">
-                              {video.athletes?.profile_photo_url ? (
+                <div className="mt-4 space-y-3">
+                  {notificationFeed.slice(0, 8).length ? (
+                    notificationFeed.slice(0, 8).map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="flex min-w-0 gap-3">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-sky-100/25 bg-sky-100/10 font-bold text-sky-100">
+                              {item.athlete?.profile_photo_url ? (
                                 <img
-                                  src={video.athletes.profile_photo_url}
+                                  src={item.athlete.profile_photo_url}
                                   alt=""
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                video.athletes?.first_name?.slice(0, 1) || "A"
+                                item.athlete?.first_name?.slice(0, 1) || "A"
                               )}
                             </div>
 
                             <div className="min-w-0">
-                              <p className="truncate font-bold">{video.title}</p>
-                              <p className="mt-1 truncate text-xs text-white/45">
-                                {video.athletes?.first_name}{" "}
-                                {video.athletes?.last_initial} -{" "}
-                                {video.athletes?.athlete_code}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+                                    item.kind === "video"
+                                      ? "bg-purple-300/15 text-purple-100"
+                                      : "bg-sky-300/15 text-sky-100"
+                                  }`}
+                                >
+                                  {item.kind}
+                                </span>
+                                <span className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">
+                                  {item.status}
+                                </span>
+                              </div>
+
+                              <p className="mt-2 truncate font-bold">
+                                {item.title}
+                              </p>
+                              <p className="mt-1 max-h-10 overflow-hidden text-sm text-white/60">
+                                {item.body}
+                              </p>
+                              <p className="mt-2 truncate text-xs text-white/40">
+                                {item.athlete?.first_name || "Athlete"}{" "}
+                                {item.athlete?.last_initial || ""} -{" "}
+                                {item.athlete?.athlete_code || "No code"}
                               </p>
                             </div>
                           </div>
-                        </button>
-                      ))
-                    ) : (
-                      <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/45">
-                        No video submissions yet.
-                      </p>
-                    )}
-                  </div>
-                </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
-                    Latest Questions
-                  </p>
-
-                  <div className="mt-3 space-y-3">
-                    {athleteQuestions.slice(0, 4).length ? (
-                      athleteQuestions.slice(0, 4).map((question) => (
-                        <button
-                          key={question.id}
-                          onClick={() => {
-                            if (question.athletes) {
-                              chooseAthlete(question.athletes);
-                              setActiveCoachTab("messages");
-                            }
-                          }}
-                          className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-sky-100/30 hover:bg-sky-100/10"
-                        >
-                          <p className="font-bold">
-                            {question.question}
-                          </p>
-                          <p className="mt-2 truncate text-xs text-white/45">
-                            {question.athletes?.first_name}{" "}
-                            {question.athletes?.last_initial} -{" "}
-                            {question.athletes?.athlete_code}
-                          </p>
-                        </button>
-                      ))
-                    ) : (
-                      <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/45">
-                        No questions yet.
-                      </p>
-                    )}
-                  </div>
+                          <div className="flex flex-wrap gap-2 lg:justify-end">
+                            <button
+                              onClick={() =>
+                                openNotificationItem(
+                                  item.athlete,
+                                  item.targetTab,
+                                  item.rawId
+                                )
+                              }
+                              className="rounded-full bg-sky-100 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-black transition hover:bg-white"
+                            >
+                              {item.actionLabel}
+                            </button>
+                            <button
+                              onClick={() =>
+                                openNotificationItem(item.athlete, "athletes")
+                              }
+                              className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/65 transition hover:bg-white hover:text-black"
+                            >
+                              Open File
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/45">
+                      No active video submissions or athlete questions yet.
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -1912,6 +2013,77 @@ export default function CoachDashboardPage() {
                   ))}
                 </div>
 
+                <div className="mt-6 rounded-3xl border border-purple-200/20 bg-gradient-to-br from-purple-950/35 via-black/30 to-sky-950/30 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-purple-100/60">
+                        Review Workflow
+                      </p>
+                      <h3 className="mt-2 text-2xl font-bold">
+                        Edit, Voiceover, Then Send Back
+                      </h3>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+                        Keep the website light: athletes submit a Drive link,
+                        you edit the file outside the website, upload the
+                        reviewed version back to Drive, then paste that reviewed
+                        link below and return it to the athlete.
+                      </p>
+                    </div>
+
+                    <a
+                      href="https://www.blackmagicdesign.com/products/davinciresolve"
+                      target="_blank"
+                      className="rounded-full border border-purple-100/30 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-purple-100 transition hover:bg-purple-100 hover:text-black"
+                    >
+                      Free Editor
+                    </a>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 md:grid-cols-4">
+                    {[
+                      [
+                        "1",
+                        "Open Original",
+                        "Open the athlete's Google Drive link from this inbox.",
+                      ],
+                      [
+                        "2",
+                        "Edit + Mark Up",
+                        "Use DaVinci Resolve for cuts, arrows, circles, text, slow motion, and voiceover.",
+                      ],
+                      [
+                        "3",
+                        "Upload Reviewed",
+                        "Export the reviewed video and upload it to your reviewed Drive folder.",
+                      ],
+                      [
+                        "4",
+                        "Return Link",
+                        "Paste the reviewed Drive link below, add feedback, and hit Return Video.",
+                      ],
+                    ].map(([step, title, text]) => (
+                      <div
+                        key={step}
+                        className="rounded-2xl border border-white/10 bg-black/25 p-4"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-200 text-sm font-black text-black">
+                          {step}
+                        </div>
+                        <p className="mt-3 font-bold">{title}</p>
+                        <p className="mt-2 text-sm leading-6 text-white/50">
+                          {text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-sky-100/15 bg-sky-100/5 p-4 text-sm leading-6 text-sky-100/75">
+                    Cost rule: do not upload raw videos into Supabase. Keep raw
+                    and reviewed videos in Google Drive, and only save the links
+                    here.
+                  </div>
+                </div>
+
                 {!selectedAthlete ? (
                   <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-white/50">
                     Choose an athlete in the Athletes tab first.
@@ -1920,6 +2092,10 @@ export default function CoachDashboardPage() {
                   <>
                     <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-5">
                       <h3 className="text-xl font-bold">Add Video Link</h3>
+                      <p className="mt-2 text-sm leading-6 text-white/50">
+                        Use Google Drive links only and keep videos under 200
+                        MB. The site saves the link, not the actual video file.
+                      </p>
 
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
                         <input
@@ -2096,10 +2272,10 @@ export default function CoachDashboardPage() {
 
                                     <div className="mt-3 flex flex-wrap gap-3">
                                       {video.status === "submitted" && (
-                                        <button
-                                          onClick={() =>
-                                            updateVideoInboxStatus(
-                                              video,
+                                            <button
+                                              onClick={() =>
+                                                updateVideoInboxStatus(
+                                                  video,
                                               "in_review"
                                             )
                                           }
@@ -2107,8 +2283,15 @@ export default function CoachDashboardPage() {
                                           className="rounded-full border border-sky-100/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-sky-100 transition hover:bg-sky-100 hover:text-black disabled:opacity-50"
                                         >
                                           Mark In Review
-                                        </button>
-                                      )}
+                                            </button>
+                                          )}
+
+                                      <button
+                                        onClick={() => openReviewStudio(video)}
+                                        className="rounded-full border border-purple-100/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-purple-100 transition hover:bg-purple-100 hover:text-black"
+                                      >
+                                        Open Studio
+                                      </button>
 
                                       <button
                                         onClick={() =>
@@ -2142,6 +2325,164 @@ export default function CoachDashboardPage() {
               </section>
             )}
 
+            {activeCoachTab === "studio" && (
+              <section className="mt-6 rounded-3xl border border-purple-200/20 bg-gradient-to-br from-purple-950/30 via-white/[0.05] to-sky-950/25 p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-purple-100/60">
+                      Review Studio
+                    </p>
+                    <h2 className="mt-2 text-3xl font-bold">
+                      Video Review Workspace
+                    </h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+                      Open the athlete video, make your edits or voiceover in
+                      your editor, then paste the reviewed Drive link and send it
+                      back from here.
+                    </p>
+                  </div>
+
+                  {selectedAthlete && (
+                    <p className="rounded-full border border-purple-100/25 bg-purple-100/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-purple-100">
+                      {selectedAthlete.athlete_code}
+                    </p>
+                  )}
+                </div>
+
+                {!selectedAthlete || !studioVideo ? (
+                  <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-white/50">
+                    Choose a video from the notification center or Videos tab
+                    first.
+                  </p>
+                ) : (
+                  <div className="mt-6 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+                    <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                        Original Video
+                      </p>
+                      <h3 className="mt-3 text-2xl font-bold">
+                        {studioVideo.title}
+                      </h3>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/60">
+                        {studioVideo.athlete_notes || "No athlete notes added."}
+                      </p>
+
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        <a
+                          href={studioVideo.video_url}
+                          target="_blank"
+                          className="rounded-full bg-sky-100 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-white"
+                        >
+                          Open Original
+                        </a>
+                        <a
+                          href="https://www.blackmagicdesign.com/products/davinciresolve"
+                          target="_blank"
+                          className="rounded-full border border-purple-100/30 px-5 py-3 text-xs font-black uppercase tracking-[0.18em] text-purple-100 transition hover:bg-purple-100 hover:text-black"
+                        >
+                          Free Editor
+                        </a>
+                        {studioVideo.status === "submitted" && (
+                          <button
+                            onClick={() =>
+                              updateVideoInboxStatus(studioVideo, "in_review")
+                            }
+                            disabled={loading}
+                            className="rounded-full border border-sky-100/30 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-sky-100 transition hover:bg-sky-100 hover:text-black disabled:opacity-50"
+                          >
+                            Mark In Review
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                          Studio Steps
+                        </p>
+                        <div className="mt-3 space-y-2 text-sm leading-6 text-white/60">
+                          <p>1. Open the original video link.</p>
+                          <p>2. Draw, voiceover, slow down, or mark up outside the site.</p>
+                          <p>3. Upload the reviewed export to Google Drive.</p>
+                          <p>4. Paste the reviewed link and return it below.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                        Return To Athlete
+                      </p>
+
+                      <textarea
+                        value={
+                          videoReviewDrafts[studioVideo.id]?.coachFeedback || ""
+                        }
+                        onChange={(event) =>
+                          updateVideoReviewDraft(
+                            studioVideo.id,
+                            "coachFeedback",
+                            event.target.value
+                          )
+                        }
+                        placeholder="Write timestamps, corrections, cues, and what you want them to focus on..."
+                        rows={8}
+                        className="mt-4 w-full rounded-2xl border border-white/15 bg-black/45 px-4 py-3 outline-none placeholder:text-white/35 focus:border-sky-200"
+                      />
+
+                      <input
+                        value={
+                          videoReviewDrafts[studioVideo.id]?.reviewedVideoUrl ||
+                          ""
+                        }
+                        onChange={(event) =>
+                          updateVideoReviewDraft(
+                            studioVideo.id,
+                            "reviewedVideoUrl",
+                            event.target.value
+                          )
+                        }
+                        placeholder="Reviewed Google Drive link"
+                        className="mt-3 w-full rounded-2xl border border-white/15 bg-black/45 px-4 py-3 outline-none placeholder:text-white/35 focus:border-sky-200"
+                      />
+
+                      <select
+                        value={
+                          videoReviewDrafts[studioVideo.id]?.status ||
+                          studioVideo.status
+                        }
+                        onChange={(event) =>
+                          updateVideoReviewDraft(
+                            studioVideo.id,
+                            "status",
+                            event.target.value
+                          )
+                        }
+                        className="mt-3 w-full rounded-2xl border border-white/15 bg-black/45 px-4 py-3 outline-none focus:border-sky-200"
+                      >
+                        <option value="submitted">Submitted</option>
+                        <option value="in_review">In Review</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="returned">Returned</option>
+                      </select>
+
+                      <button
+                        onClick={() => returnVideoReview(studioVideo)}
+                        disabled={loading}
+                        className="mt-4 rounded-full bg-sky-100 px-6 py-4 text-xs font-black uppercase tracking-[0.18em] text-black transition hover:bg-white disabled:opacity-50"
+                      >
+                        Return Video
+                      </button>
+
+                      <p className="mt-4 rounded-2xl border border-sky-100/15 bg-sky-100/5 p-4 text-sm leading-6 text-sky-100/70">
+                        This sends the reviewed link and feedback back to the
+                        athlete's Videos tab.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
             {activeCoachTab === "progress" && (
               <section className="mt-6 rounded-3xl border border-white/10 bg-white/[0.05] p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -2154,38 +2495,34 @@ export default function CoachDashboardPage() {
 
                   <select
                     value={metricType}
-                    onChange={(event) => {
-                      const value = event.target.value;
-
-                      setMetricType(value);
-
-                      if (value === "calories_burned") {
-                        setMetricLabel("Calories burned");
-                        setMetricUnit("calories");
-                      }
-
-                      if (value === "weight_goal") {
-                        setMetricLabel("Weight goal progress");
-                        setMetricUnit("%");
-                      }
-
-                      if (value === "training_completed") {
-                        setMetricLabel("Training completed");
-                        setMetricUnit("workouts");
-                      }
-
-                      if (value === "video_reviews") {
-                        setMetricLabel("Video reviews");
-                        setMetricUnit("videos");
-                      }
-                    }}
+                    onChange={(event) => applyMetricPreset(event.target.value)}
                     className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-sky-200"
                   >
-                    <option value="calories_burned">Calories burned</option>
-                    <option value="weight_goal">Weight goal</option>
-                    <option value="training_completed">Training completed</option>
-                    <option value="video_reviews">Video reviews</option>
+                    {progressMetricPresets.map((preset) => (
+                      <option key={preset.type} value={preset.type}>
+                        {preset.label}
+                      </option>
+                    ))}
                   </select>
+                </div>
+
+                <div className="mt-6 grid gap-3 lg:grid-cols-4">
+                  {progressMetricPresets.map((preset) => (
+                    <button
+                      key={preset.type}
+                      onClick={() => applyMetricPreset(preset.type)}
+                      className={`rounded-3xl border p-4 text-left transition ${
+                        metricType === preset.type
+                          ? "border-purple-200/50 bg-purple-300/15 text-white"
+                          : "border-white/10 bg-black/25 text-white/60 hover:border-sky-100/25 hover:text-white"
+                      }`}
+                    >
+                      <p className="text-sm font-bold">{preset.label}</p>
+                      <p className="mt-2 text-xs leading-5 text-white/45">
+                        {preset.helper}
+                      </p>
+                    </button>
+                  ))}
                 </div>
 
                 <div className="mt-6 rounded-3xl border border-purple-300/25 bg-purple-500/10 p-5">
@@ -2274,9 +2611,30 @@ export default function CoachDashboardPage() {
                   </p>
                 ) : (
                   <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-5">
-                    <h3 className="text-xl font-bold">Add Progress Entry</h3>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-100/50">
+                          Chart Data Entry
+                        </p>
+                        <h3 className="mt-2 text-xl font-bold">
+                          Add Progress Entry
+                        </h3>
+                      </div>
+                      <p className="text-sm text-white/45">
+                        These numbers appear inside the athlete Progress tab.
+                      </p>
+                    </div>
 
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                      <input
+                        type="date"
+                        value={metricEntryDate}
+                        onChange={(event) =>
+                          setMetricEntryDate(event.target.value)
+                        }
+                        className="rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                      />
+
                       <input
                         value={metricLabel}
                         onChange={(event) => setMetricLabel(event.target.value)}
@@ -2478,11 +2836,104 @@ export default function CoachDashboardPage() {
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-100/60">
                   Dashboard Settings
                 </p>
-                <h2 className="mt-2 text-3xl font-bold">Settings</h2>
-                <p className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-5 text-white/55">
-                  Email notifications, upload limits, and storage rules will live
-                  here as we add the video workflow.
-                </p>
+                <h2 className="mt-2 text-3xl font-bold">Operations Rules</h2>
+
+                <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                  {[
+                    {
+                      title: "Video Storage",
+                      status: "Drive links only",
+                      text: "Raw and reviewed videos stay in Google Drive. The website only saves the sharing links.",
+                    },
+                    {
+                      title: "Upload Limit",
+                      status: "200 MB max",
+                      text: "Athlete video entries and coach-added video entries reject files listed over 200 MB.",
+                    },
+                    {
+                      title: "Content Safety",
+                      status: "OpenAI + local filter",
+                      text: "Questions, video text, and profile photos are checked before they save.",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-3xl border border-white/10 bg-black/25 p-5"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                        {item.title}
+                      </p>
+                      <p className="mt-3 text-xl font-black text-sky-100">
+                        {item.status}
+                      </p>
+                      <p className="mt-3 text-sm leading-6 text-white/55">
+                        {item.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-3xl border border-purple-200/20 bg-purple-300/10 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-100/65">
+                      Required Environment Names
+                    </p>
+                    <div className="mt-4 grid gap-2 text-sm text-white/70">
+                      {[
+                        "NEXT_PUBLIC_SUPABASE_URL",
+                        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+                        "SUPABASE_SERVICE_ROLE_KEY",
+                        "COACH_DASHBOARD_PASSWORD",
+                        "RESEND_API_KEY",
+                        "COACH_NOTIFICATION_EMAIL",
+                        "OPENAI_API_KEY",
+                      ].map((envName) => (
+                        <code
+                          key={envName}
+                          className="rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sky-100"
+                        >
+                          {envName}
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-sky-100/15 bg-sky-100/5 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-100/65">
+                      Working Flow
+                    </p>
+                    <div className="mt-4 space-y-3 text-sm leading-6 text-white/65">
+                      {[
+                        "Athlete submits a Google Drive video link.",
+                        "Coach inbox shows the video and athlete connection.",
+                        "Coach edits in DaVinci Resolve or another free editor.",
+                        "Coach uploads reviewed video to Google Drive.",
+                        "Coach pastes reviewed link and returns it to the athlete.",
+                      ].map((step, index) => (
+                        <div
+                          key={step}
+                          className="flex gap-3 rounded-2xl border border-white/10 bg-black/25 p-3"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-black text-black">
+                            {index + 1}
+                          </span>
+                          <span>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+                    Secret Safety
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-white/60">
+                    This panel only lists environment variable names. It never
+                    displays secret values, API keys, service role keys, or the
+                    coach password.
+                  </p>
+                </div>
               </section>
             )}
           </div>

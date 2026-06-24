@@ -5,8 +5,24 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const maxCoachFeedbackChars = 2000;
+
 function isCoach(password: string) {
   return password && password === process.env.COACH_DASHBOARD_PASSWORD;
+}
+
+function isGoogleDriveLink(value: string) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      (host === "drive.google.com" || host === "docs.google.com")
+    );
+  } catch {
+    return false;
+  }
 }
 
 function escapeHtml(value: string) {
@@ -120,6 +136,27 @@ export async function POST(request: Request) {
       !["submitted", "in_review", "reviewed", "returned"].includes(status)
     ) {
       return Response.json({ error: "Invalid video status." }, { status: 400 });
+    }
+
+    if (coachFeedback.length > maxCoachFeedbackChars) {
+      return Response.json(
+        { error: `Keep video feedback under ${maxCoachFeedbackChars} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (
+      (status === "reviewed" || status === "returned") &&
+      reviewedVideoUrl &&
+      !isGoogleDriveLink(reviewedVideoUrl)
+    ) {
+      return Response.json(
+        {
+          error:
+            "Use a Google Drive sharing link for the reviewed video.",
+        },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabaseAdmin

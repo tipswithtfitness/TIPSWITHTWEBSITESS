@@ -2244,6 +2244,10 @@ export default function LoginPage() {
                     Videos
                   </p>
                   <h2 className="mt-2 text-2xl font-black">Submit A Video</h2>
+                  <p className="mt-2 text-sm leading-6 text-white/50">
+                    Upload your video to Google Drive first, then paste the
+                    sharing link here. Keep videos under 200 MB.
+                  </p>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <input

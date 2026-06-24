@@ -11,6 +11,8 @@ const warningMessage =
 const localTextWarning =
   "Please revise this before submitting. Tips With T does not allow vulgar, sexual, hateful, threatening, graphic, self-harm, or unsafe content.";
 
+const maxModerationTextChars = 4000;
+
 function getTextFromInput(input: ModerationInput) {
   if (typeof input === "string") {
     return input;
@@ -20,6 +22,27 @@ function getTextFromInput(input: ModerationInput) {
     .filter((item) => item.type === "text")
     .map((item) => ("text" in item ? item.text : ""))
     .join(" ");
+}
+
+function trimModerationText(value: string) {
+  return value.slice(0, maxModerationTextChars);
+}
+
+function normalizeModerationInput(input: ModerationInput): ModerationInput {
+  if (typeof input === "string") {
+    return trimModerationText(input);
+  }
+
+  return input.map((item) => {
+    if (item.type === "text") {
+      return {
+        type: "text",
+        text: trimModerationText(item.text),
+      };
+    }
+
+    return item;
+  });
 }
 
 function hasImageInput(input: ModerationInput) {
@@ -53,14 +76,33 @@ function getFlaggedCategories(result: any) {
 }
 
 export async function moderateContent(input: ModerationInput) {
+  const normalizedInput = normalizeModerationInput(input);
+  const localCheck = localTextSafetyCheck(normalizedInput);
+
+  if (!localCheck.allowed) {
+    return {
+      ...localCheck,
+      skipped: false,
+    };
+  }
+
   const openAiKey = process.env.OPENAI_API_KEY?.trim();
 
   if (!openAiKey) {
+    if (!hasImageInput(normalizedInput)) {
+      return {
+        allowed: true,
+        skipped: true,
+        warning: "",
+        categories: [],
+      };
+    }
+
     return {
       allowed: false,
       skipped: true,
       warning:
-        "Content safety is not configured yet. Please try again later.",
+        "Image safety is not configured yet. Please try again later.",
       categories: [],
     };
   }
@@ -73,7 +115,7 @@ export async function moderateContent(input: ModerationInput) {
     },
     body: JSON.stringify({
       model: "omni-moderation-latest",
-      input,
+      input: normalizedInput,
     }),
   });
 
@@ -89,8 +131,8 @@ export async function moderateContent(input: ModerationInput) {
       response.status === 429 ||
       openAiMessage.toLowerCase().includes("too many requests");
 
-    if (isRateLimited && !hasImageInput(input)) {
-      return localTextSafetyCheck(input);
+    if (isRateLimited && !hasImageInput(normalizedInput)) {
+      return localCheck;
     }
 
     return {
