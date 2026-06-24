@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { fileToDataUrl, moderateContent } from "@/app/lib/content-moderation";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,15 +21,32 @@ export async function POST(request: Request) {
     }
 
     if (!file.type.startsWith("image/")) {
-      return Response.json(
-        { error: "Please choose an image file." },
-        { status: 400 }
-      );
+      return Response.json({ error: "Please choose an image file." }, { status: 400 });
     }
 
     if (file.size > 5 * 1024 * 1024) {
       return Response.json(
         { error: "Please choose an image smaller than 5 MB." },
+        { status: 400 }
+      );
+    }
+
+    const imageDataUrl = await fileToDataUrl(file);
+    const moderation = await moderateContent([
+      {
+        type: "image_url",
+        image_url: {
+          url: imageDataUrl,
+        },
+      },
+    ]);
+
+    if (!moderation.allowed) {
+      return Response.json(
+        {
+          error: moderation.warning,
+          categories: moderation.categories,
+        },
         { status: 400 }
       );
     }
@@ -71,9 +89,9 @@ export async function POST(request: Request) {
       athlete,
       profilePhotoUrl,
     });
-  } catch {
+  } catch (error: any) {
     return Response.json(
-      { error: "Something went wrong uploading the profile photo." },
+      { error: error?.message || "Something went wrong uploading the profile photo." },
       { status: 500 }
     );
   }

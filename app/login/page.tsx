@@ -25,6 +25,192 @@ const profileWidgetOptions = [
   { key: "anything_else", label: "Anything Else" },
 ];
 
+const chartTypeOptions = [
+  { key: "line", label: "Line" },
+  { key: "area", label: "Area" },
+  { key: "column", label: "Column" },
+  { key: "bar", label: "Bar" },
+  { key: "scatter", label: "Scatter" },
+  { key: "pie", label: "Pie" },
+  { key: "doughnut", label: "Doughnut" },
+];
+
+const chartXAxisOptions = [
+  { key: "entry_date", label: "Date" },
+  { key: "entry_number", label: "Entry Number" },
+  { key: "metric_label", label: "Metric Label" },
+];
+
+const chartYAxisOptions = [
+  { key: "calories_burned", label: "Calories Burned", unit: "calories" },
+  { key: "training_completed", label: "Training Completed", unit: "%" },
+  { key: "video_reviews", label: "Video Reviews", unit: "reviews" },
+  { key: "weight_goal", label: "Weight Goal", unit: "%" },
+];
+
+const chartWidgetPresets: Record<
+  string,
+  {
+    key: string;
+    label: string;
+    metricType: string;
+    chartType: string;
+    xValue: string;
+    xLabel: string;
+    yLabel: string;
+  }
+> = {
+  calories_burned_line: {
+    key: "calories_burned_line",
+    label: "Calories Burned Line Chart",
+    metricType: "calories_burned",
+    chartType: "line",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Calories Burned",
+  },
+  calories_burned_chart: {
+    key: "calories_burned_chart",
+    label: "Calories Burned Column Chart",
+    metricType: "calories_burned",
+    chartType: "column",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Calories Burned",
+  },
+  training_completed_column: {
+    key: "training_completed_column",
+    label: "Training Completed Column Chart",
+    metricType: "training_completed",
+    chartType: "column",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Training Completed",
+  },
+  training_completed_chart: {
+    key: "training_completed_chart",
+    label: "Training Completed Column Chart",
+    metricType: "training_completed",
+    chartType: "column",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Training Completed",
+  },
+  video_reviews_bar: {
+    key: "video_reviews_bar",
+    label: "Video Reviews Bar Chart",
+    metricType: "video_reviews",
+    chartType: "bar",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Video Reviews",
+  },
+  video_reviews_chart: {
+    key: "video_reviews_chart",
+    label: "Video Reviews Bar Chart",
+    metricType: "video_reviews",
+    chartType: "bar",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Video Reviews",
+  },
+  weight_goal_area: {
+    key: "weight_goal_area",
+    label: "Weight Goal Area Chart",
+    metricType: "weight_goal",
+    chartType: "area",
+    xValue: "entry_date",
+    xLabel: "Date",
+    yLabel: "Goal Progress",
+  },
+};
+
+const progressWidgetGroups = [
+  {
+    label: "Progress Bars",
+    options: [{ key: "weight_goal", label: "Weight Goal Lava Bar" }],
+  },
+  {
+    label: "Tables",
+    options: [
+      { key: "calories_burned", label: "Calories Burned Table" },
+      { key: "training_completed", label: "Training Completed Table" },
+      { key: "video_reviews", label: "Video Reviews Table" },
+    ],
+  },
+  {
+    label: "Recommended Charts",
+    options: [
+      chartWidgetPresets.calories_burned_line,
+      chartWidgetPresets.calories_burned_chart,
+      chartWidgetPresets.training_completed_column,
+      chartWidgetPresets.video_reviews_bar,
+      chartWidgetPresets.weight_goal_area,
+    ],
+  },
+  {
+    label: "Custom Chart",
+    options: [{ key: "chart_custom", label: "Custom Chart" }],
+  },
+];
+
+const progressWidgetOptions = progressWidgetGroups.flatMap(
+  (group) => group.options
+);
+
+const progressWidgetStorageKey = "__progress_widgets";
+const customChartSettingsStorageKey = "__custom_progress_chart";
+const defaultProgressWidgets = ["weight_goal"];
+const defaultCustomChartSettings = {
+  chartType: "line",
+  xValue: "entry_date",
+  metricType: "calories_burned",
+};
+
+function getSavedProgressWidgets(profileExtras: any) {
+  const savedWidgets = profileExtras?.[progressWidgetStorageKey];
+
+  if (!Array.isArray(savedWidgets)) {
+    return defaultProgressWidgets;
+  }
+
+  const validWidgetKeys = [
+    ...progressWidgetOptions.map((option) => option.key),
+    ...Object.keys(chartWidgetPresets),
+  ];
+  const validSavedWidgets = savedWidgets.filter((widgetKey) =>
+    validWidgetKeys.includes(widgetKey)
+  );
+
+  return validSavedWidgets;
+}
+
+function getSavedCustomChartSettings(profileExtras: any) {
+  const savedSettings = profileExtras?.[customChartSettingsStorageKey];
+
+  if (!savedSettings || typeof savedSettings !== "object") {
+    return defaultCustomChartSettings;
+  }
+
+  return {
+    chartType: chartTypeOptions.some(
+      (option) => option.key === savedSettings.chartType
+    )
+      ? savedSettings.chartType
+      : defaultCustomChartSettings.chartType,
+    xValue: chartXAxisOptions.some(
+      (option) => option.key === savedSettings.xValue
+    )
+      ? savedSettings.xValue
+      : defaultCustomChartSettings.xValue,
+    metricType: chartYAxisOptions.some(
+      (option) => option.key === savedSettings.metricType
+    )
+      ? savedSettings.metricType
+      : defaultCustomChartSettings.metricType,
+  };
+}
+
 // ==============================
 // DATE HELPERS FOR COACH NOTES
 // ==============================
@@ -55,6 +241,57 @@ function getTodayLabel() {
   });
 }
 
+function escapePrintHtml(value: any) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+type TrainingDay = {
+  id?: string;
+  week_number: number;
+  day_name: string;
+  focus?: string;
+  workout?: string;
+  coach_notes?: string;
+  sort_order?: number;
+};
+
+type AthleteMetric = {
+  id: string;
+  entry_date: string;
+  metric_type: string;
+  metric_label: string;
+  metric_value?: number | null;
+  metric_unit?: string;
+  notes?: string;
+};
+
+type VideoSubmission = {
+  id: string;
+  title: string;
+  video_url: string;
+  athlete_notes?: string;
+  file_size_mb?: number | null;
+  status: "submitted" | "in_review" | "reviewed" | "returned";
+  coach_feedback?: string;
+  reviewed_video_url?: string;
+  athlete_seen_at?: string | null;
+  created_at?: string;
+};
+
+type AthleteQuestion = {
+  id: string;
+  question: string;
+  status: "new" | "seen" | "answered" | "archived";
+  coach_answer?: string;
+  athlete_seen_at?: string | null;
+  created_at?: string;
+};
+
 // ==============================
 // MAIN LOGIN PAGE COMPONENT
 // ==============================
@@ -72,11 +309,35 @@ export default function LoginPage() {
   const [dailyFact, setDailyFact] = useState("");
   const [coachNotes, setCoachNotes] = useState<any[]>([]);
   const [trainingWeeks, setTrainingWeeks] = useState<any[]>([]);
+  const [trainingDays, setTrainingDays] = useState<TrainingDay[]>([]);
+  const [athleteMetrics, setAthleteMetrics] = useState<AthleteMetric[]>([]);
+  const [videoSubmissions, setVideoSubmissions] = useState<VideoSubmission[]>(
+    []
+  );
+  const [athleteQuestions, setAthleteQuestions] = useState<AthleteQuestion[]>(
+    []
+  );
   const [selectedWeek, setSelectedWeek] = useState(0);
+  const [selectedMetricType, setSelectedMetricType] =
+    useState("calories_burned");
+  const [selectedProgressWidget, setSelectedProgressWidget] = useState("");
+  const [activeProgressWidgets, setActiveProgressWidgets] = useState<string[]>(
+    defaultProgressWidgets
+  );
+  const [customChartSettings, setCustomChartSettings] = useState(
+    defaultCustomChartSettings
+  );
   const [selectedWidget, setSelectedWidget] = useState("");
   const [hasUnsavedProfileChanges, setHasUnsavedProfileChanges] =
     useState(false);
   const [profileNotice, setProfileNotice] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoSizeMb, setVideoSizeMb] = useState("");
+  const [videoNotes, setVideoNotes] = useState("");
+  const [videoNotice, setVideoNotice] = useState("");
+  const [athleteQuestion, setAthleteQuestion] = useState("");
+  const [questionNotice, setQuestionNotice] = useState("");
   // =============================
   // PROFILE PHOTO UPLOAD STATE
   // Tracks when the athlete is uploading a new profile picture.
@@ -163,6 +424,227 @@ export default function LoginPage() {
   }, [isWelcomeLoading, pendingAthlete]);
 
   // ==============================
+  // LOAD ATHLETE DASHBOARD DATA
+  // Pulls Monday-Friday training, progress metrics, and video submissions.
+  // ==============================
+  const loadAthleteDashboardData = async (
+    loginEmail = email,
+    loginCode = athleteCode
+  ) => {
+    try {
+      const response = await fetch("/api/athlete/dashboard-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginEmail,
+          athleteCode: loginCode,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return;
+      }
+
+      setTrainingDays(result.trainingDays || []);
+      setAthleteMetrics(result.athleteMetrics || []);
+      setVideoSubmissions(result.videoSubmissions || []);
+      setAthleteQuestions(result.athleteQuestions || []);
+    } catch {
+      return;
+    }
+  };
+
+  const addProgressWidget = () => {
+    if (!selectedProgressWidget) return;
+
+    if (activeProgressWidgets.includes(selectedProgressWidget)) {
+      setSelectedProgressWidget("");
+      return;
+    }
+
+    const nextWidgets = [...activeProgressWidgets, selectedProgressWidget];
+
+    setActiveProgressWidgets(nextWidgets);
+    saveProgressWidgets(nextWidgets);
+    setSelectedProgressWidget("");
+  };
+
+  const removeProgressWidget = (widgetKey: string) => {
+    const nextWidgets = activeProgressWidgets.filter((key) => key !== widgetKey);
+
+    setActiveProgressWidgets(nextWidgets);
+    saveProgressWidgets(nextWidgets);
+  };
+
+  const saveProgressWidgets = async (widgets: string[]) => {
+    if (!athlete) return;
+
+    const nextProfileExtras = {
+      ...(athlete.profile_extras || {}),
+      [progressWidgetStorageKey]: widgets,
+    };
+
+    setAthlete({
+      ...athlete,
+      profile_extras: nextProfileExtras,
+    });
+
+    try {
+      await supabase
+        .from("athletes")
+        .update({
+          profile_extras: nextProfileExtras,
+        })
+        .eq("id", athlete.id);
+    } catch {
+      return;
+    }
+  };
+
+  const saveCustomChartSettings = async (
+    nextSettings: typeof defaultCustomChartSettings
+  ) => {
+    if (!athlete) return;
+
+    const nextProfileExtras = {
+      ...(athlete.profile_extras || {}),
+      [customChartSettingsStorageKey]: nextSettings,
+    };
+
+    setAthlete({
+      ...athlete,
+      profile_extras: nextProfileExtras,
+    });
+
+    try {
+      await supabase
+        .from("athletes")
+        .update({
+          profile_extras: nextProfileExtras,
+        })
+        .eq("id", athlete.id);
+    } catch {
+      return;
+    }
+  };
+
+  const updateCustomChartSetting = (
+    field: keyof typeof defaultCustomChartSettings,
+    value: string
+  ) => {
+    const nextSettings = {
+      ...customChartSettings,
+      [field]: value,
+    };
+
+    setCustomChartSettings(nextSettings);
+    saveCustomChartSettings(nextSettings);
+  };
+
+  // ==============================
+  // SUBMIT ATHLETE VIDEO LINK
+  // Keeps Supabase storage safe by saving a video link, not the actual file.
+  // ==============================
+  const submitVideo = async () => {
+    if (!videoTitle.trim() || !videoUrl.trim()) {
+      setVideoNotice("Add a video title and link first.");
+      return;
+    }
+
+    setVideoNotice("");
+
+    try {
+      const response = await fetch("/api/athlete/video-submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          athleteCode,
+          title: videoTitle,
+          videoUrl,
+          fileSizeMb: videoSizeMb,
+          athleteNotes: videoNotes,
+        }),
+      });
+
+      const responseText = await response.text();
+      let result: any = {};
+
+      try {
+        result = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        result = {
+          error: `The video route did not return JSON. Status: ${
+            response.status
+          }. Response: ${responseText.slice(0, 180)}`,
+        };
+      }
+
+      if (!response.ok) {
+        setVideoNotice(
+          result.error || `Could not submit video. Status: ${response.status}`
+        );
+        return;
+      }
+
+      setVideoTitle("");
+      setVideoUrl("");
+      setVideoSizeMb("");
+      setVideoNotes("");
+      setVideoNotice("Video submitted.");
+      await loadAthleteDashboardData();
+    } catch (error: any) {
+      setVideoNotice(error?.message || "Could not submit video.");
+    }
+  };
+
+  // ==============================
+  // SUBMIT ATHLETE QUESTION
+  // Sends the question to the coach notification bar.
+  // ==============================
+  const submitQuestion = async () => {
+    if (!athleteQuestion.trim()) {
+      setQuestionNotice("Write a question first.");
+      return;
+    }
+
+    setQuestionNotice("");
+
+    try {
+      const response = await fetch("/api/athlete/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          athleteCode,
+          question: athleteQuestion,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setQuestionNotice(result.error || "Could not submit question.");
+        return;
+      }
+
+      setAthleteQuestion("");
+      setQuestionNotice("Question sent.");
+      await loadAthleteDashboardData();
+    } catch {
+      setQuestionNotice("Could not submit question.");
+    }
+  };
+
+  // ==============================
   // HANDLE ATHLETE LOGIN
   // Works from clicking the button, pressing Enter/Return, or saved login.
   // ==============================
@@ -224,7 +706,12 @@ export default function LoginPage() {
 
     setCoachNotes(notesData || []);
     setTrainingWeeks(weeksData || []);
+    await loadAthleteDashboardData(loginEmail, loginCode);
     setSelectedWeek(0);
+    setActiveProgressWidgets(getSavedProgressWidgets(data.profile_extras || {}));
+    setCustomChartSettings(
+      getSavedCustomChartSettings(data.profile_extras || {})
+    );
 
     setPendingAthlete({
       ...data,
@@ -273,6 +760,59 @@ export default function LoginPage() {
 
     setProfileNotice("");
     setActiveTab(tab);
+
+    if (tab === "Videos") {
+      markAthleteUpdatesSeen("videos");
+    }
+
+    if (tab === "Updates") {
+      markAthleteUpdatesSeen("questions");
+    }
+  };
+
+  const markAthleteUpdatesSeen = async (type: "videos" | "questions") => {
+    if (!athlete) return;
+
+    const seenAt = new Date().toISOString();
+
+    if (type === "videos") {
+      setVideoSubmissions((currentVideos) =>
+        currentVideos.map((video) =>
+          video.status === "reviewed" ||
+          video.status === "returned" ||
+          video.coach_feedback ||
+          video.reviewed_video_url
+            ? { ...video, athlete_seen_at: seenAt }
+            : video
+        )
+      );
+    }
+
+    if (type === "questions") {
+      setAthleteQuestions((currentQuestions) =>
+        currentQuestions.map((question) =>
+          question.coach_answer
+            ? { ...question, athlete_seen_at: seenAt }
+            : question
+        )
+      );
+    }
+
+    try {
+      await fetch("/api/athlete/mark-seen", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          athleteCode,
+          type,
+        }),
+      });
+    } catch {
+      return;
+    }
   };
 
   // ==============================
@@ -348,6 +888,10 @@ export default function LoginPage() {
       ...data,
       profile_extras: data.profile_extras || {},
     });
+    setActiveProgressWidgets(getSavedProgressWidgets(data.profile_extras || {}));
+    setCustomChartSettings(
+      getSavedCustomChartSettings(data.profile_extras || {})
+    );
     setHasUnsavedProfileChanges(false);
     setProfileNotice("");
     setSaveMessage("Profile saved.");
@@ -426,6 +970,187 @@ export default function LoginPage() {
     ];
 
     const currentWeek = trainingWeeks[selectedWeek];
+    const currentWeekNumber = Number(
+      currentWeek?.week_number || selectedWeek + 1
+    );
+    const visibleTrainingDays = trainingDays.filter(
+      (day) => Number(day.week_number) === currentWeekNumber
+    );
+
+    const videoUpdateCount = videoSubmissions.filter(
+      (video) =>
+        !video.athlete_seen_at &&
+        (video.status === "reviewed" ||
+          video.status === "returned" ||
+          Boolean(video.coach_feedback) ||
+          Boolean(video.reviewed_video_url))
+    ).length;
+
+    const answeredQuestionCount = athleteQuestions.filter(
+      (question) => !question.athlete_seen_at && Boolean(question.coach_answer)
+    ).length;
+
+    const getTabBadgeCount = (tab: string) => {
+      if (tab === "Videos") return videoUpdateCount;
+      if (tab === "Updates") return answeredQuestionCount;
+      return 0;
+    };
+
+    const printWorkoutSheet = () => {
+      const athleteName = `${athlete.first_name || "Athlete"} ${
+        athlete.last_initial || ""
+      }`.trim();
+      const weekLabel = currentWeek
+        ? `Week ${currentWeek.week_number}`
+        : "Training Plan";
+      const title =
+        currentWeek?.title || currentWeek?.focus || "Training Plan";
+      const plan =
+        currentWeek?.plan ||
+        athlete.plan ||
+        "Your week-by-week training plan will appear here once Coach T adds it.";
+
+      const dayRows = visibleTrainingDays.length
+        ? visibleTrainingDays
+            .map(
+              (day) => `
+                <tr>
+                  <td>${escapePrintHtml(day.day_name)}</td>
+                  <td>${escapePrintHtml(day.focus || "-")}</td>
+                  <td>${escapePrintHtml(day.workout || "-")}</td>
+                  <td>${escapePrintHtml(day.coach_notes || "-")}</td>
+                </tr>
+              `
+            )
+            .join("")
+        : `
+            <tr>
+              <td colspan="4">No Monday-Friday workout details have been added yet.</td>
+            </tr>
+          `;
+
+      const printWindow = window.open("", "_blank", "width=900,height=700");
+
+      if (!printWindow) {
+        return;
+      }
+
+      printWindow.document.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <title>${escapePrintHtml(athleteName)} - ${escapePrintHtml(
+              weekLabel
+            )}</title>
+            <style>
+              body {
+                margin: 0;
+                padding: 40px;
+                color: #111827;
+                font-family: Arial, sans-serif;
+              }
+
+              .sheet {
+                max-width: 900px;
+                margin: 0 auto;
+              }
+
+              .eyebrow {
+                color: #0369a1;
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.22em;
+                text-transform: uppercase;
+              }
+
+              h1 {
+                margin: 10px 0 4px;
+                font-size: 34px;
+              }
+
+              h2 {
+                margin: 28px 0 10px;
+                font-size: 20px;
+              }
+
+              .meta {
+                color: #4b5563;
+                font-size: 14px;
+              }
+
+              .plan {
+                margin-top: 18px;
+                padding: 18px;
+                border: 1px solid #d1d5db;
+                border-radius: 16px;
+                white-space: pre-wrap;
+                line-height: 1.65;
+              }
+
+              table {
+                width: 100%;
+                margin-top: 16px;
+                border-collapse: collapse;
+                font-size: 13px;
+              }
+
+              th,
+              td {
+                border: 1px solid #d1d5db;
+                padding: 12px;
+                text-align: left;
+                vertical-align: top;
+              }
+
+              th {
+                background: #e0f2fe;
+                color: #0f172a;
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+              }
+
+              @media print {
+                body {
+                  padding: 24px;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <main class="sheet">
+              <p class="eyebrow">Tips With T Workout Sheet</p>
+              <h1>${escapePrintHtml(athleteName)}</h1>
+              <p class="meta">${escapePrintHtml(weekLabel)} - ${escapePrintHtml(
+        getTodayLabel()
+      )}</p>
+
+              <h2>${escapePrintHtml(title)}</h2>
+              <div class="plan">${escapePrintHtml(plan)}</div>
+
+              <h2>Monday-Friday Plan</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Focus</th>
+                    <th>Workout</th>
+                    <th>Coach Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${dayRows}
+                </tbody>
+              </table>
+            </main>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    };
 
     const applicationItems = [
       ["Category", athlete.service || athlete.category],
@@ -443,7 +1168,10 @@ export default function LoginPage() {
       ["Pricing option", athlete.pricing_option],
     ].filter((item) => item[1]);
 
-    const activeProfileExtras = Object.keys(athlete.profile_extras || {});
+    const activeProfileExtras = Object.keys(athlete.profile_extras || {}).filter(
+      (key) =>
+        key !== progressWidgetStorageKey && key !== customChartSettingsStorageKey
+    );
     const availableProfileWidgets = profileWidgetOptions.filter(
       (option) => !activeProfileExtras.includes(option.key)
     );
@@ -543,19 +1271,35 @@ export default function LoginPage() {
             {/* MAIN DASHBOARD TABS */}
             {/* ============================== */}
             <div className="relative mt-8 flex flex-wrap gap-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => changeTab(tab)}
-                  className={`rounded-full px-5 py-2 text-sm uppercase tracking-[0.18em] transition duration-300 ${
-                    activeTab === tab
-                      ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.42)]"
-                      : "border border-white/15 bg-white/5 text-white/70 hover:border-sky-200/50 hover:bg-sky-200/10 hover:text-white"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const badgeCount = getTabBadgeCount(tab);
+
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => changeTab(tab)}
+                    className={`relative inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm uppercase tracking-[0.18em] transition duration-300 ${
+                      activeTab === tab
+                        ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.42)]"
+                        : "border border-white/15 bg-white/5 text-white/70 hover:border-sky-200/50 hover:bg-sky-200/10 hover:text-white"
+                    }`}
+                  >
+                    <span>{tab}</span>
+
+                    {badgeCount > 0 && (
+                      <span
+                        className={`flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] font-black tracking-normal ${
+                          activeTab === tab
+                            ? "bg-black text-sky-100"
+                            : "bg-sky-100 text-black shadow-[0_0_18px_rgba(186,230,253,0.45)]"
+                        }`}
+                      >
+                        {badgeCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* ============================== */}
@@ -588,6 +1332,28 @@ export default function LoginPage() {
                   <div className="pointer-events-none absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-sky-200/10 to-transparent" />
 
                   <div className="relative">
+                    <button
+                      onClick={printWorkoutSheet}
+                      title="Print workout sheet"
+                      className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M6 9V2h12v7" />
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                        <path d="M6 14h12v8H6z" />
+                      </svg>
+                      <span className="sr-only">Print workout sheet</span>
+                    </button>
+
                     <p className="text-xs uppercase tracking-[0.35em] text-sky-100/50">
                       Training Plan
                     </p>
@@ -635,6 +1401,40 @@ export default function LoginPage() {
                           "Your week-by-week training plan will appear here once Coach T adds it."}
                       </p>
                     </div>
+
+                    {visibleTrainingDays.length > 0 && (
+                      <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]">
+                        <table className="w-full min-w-[720px] text-left text-sm">
+                          <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
+                            <tr>
+                              <th className="px-4 py-4">Day</th>
+                              <th className="px-4 py-4">Focus</th>
+                              <th className="px-4 py-4">Workout</th>
+                              <th className="px-4 py-4">Coach Notes</th>
+                            </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-white/10">
+                            {visibleTrainingDays.map((day) => (
+                              <tr key={day.id || day.day_name}>
+                                <td className="px-4 py-4 font-bold text-sky-100">
+                                  {day.day_name}
+                                </td>
+                                <td className="px-4 py-4 text-white/70">
+                                  {day.focus || "-"}
+                                </td>
+                                <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                  {day.workout || "-"}
+                                </td>
+                                <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                  {day.coach_notes || "-"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -801,27 +1601,831 @@ export default function LoginPage() {
               {/* PROGRESS / VIDEOS / UPDATES TABS */}
               {/* ============================== */}
               {activeTab === "Progress" && (
-                <DashboardCard
-                  eyebrow="Your Growth"
-                  title="Progress"
-                  text="Progress pictures, check-ins, and notes will appear here."
-                />
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                        Progress
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black">
+                        Your Progress Widgets
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-col gap-3 md:flex-row">
+                    <select
+                      value={selectedProgressWidget}
+                      onChange={(event) =>
+                        setSelectedProgressWidget(event.target.value)
+                      }
+                      className="flex-1 rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
+                    >
+                      <option value="">Choose a progress view</option>
+                      {progressWidgetGroups.map((group) => {
+                        const availableGroupOptions = group.options.filter(
+                          (option) => !activeProgressWidgets.includes(option.key)
+                        );
+
+                        if (!availableGroupOptions.length) return null;
+
+                        return (
+                          <optgroup key={group.label} label={group.label}>
+                            {availableGroupOptions.map((option) => (
+                              <option key={option.key} value={option.key}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
+                    </select>
+
+                    <button
+                      onClick={addProgressWidget}
+                      className="rounded-full border border-purple-200/30 bg-purple-300/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-purple-100 transition hover:bg-purple-200 hover:text-black"
+                    >
+                      Add View
+                    </button>
+                  </div>
+
+                  <div className="mt-6 space-y-5">
+                    {activeProgressWidgets.length ? (
+                      activeProgressWidgets.map((widgetKey) => {
+                        const option = progressWidgetOptions.find(
+                          (item) => item.key === widgetKey
+                        );
+                        const isCustomChart = widgetKey === "chart_custom";
+                        const chartPreset = chartWidgetPresets[widgetKey];
+                        const chartSettings = isCustomChart
+                          ? {
+                              key: "chart_custom",
+                              label: "Custom Chart",
+                              metricType: customChartSettings.metricType,
+                              chartType: customChartSettings.chartType,
+                              xValue: customChartSettings.xValue,
+                              xLabel:
+                                chartXAxisOptions.find(
+                                  (item) =>
+                                    item.key === customChartSettings.xValue
+                                )?.label || "Date",
+                              yLabel:
+                                chartYAxisOptions.find(
+                                  (item) =>
+                                    item.key === customChartSettings.metricType
+                                )?.label || "Value",
+                            }
+                          : chartPreset;
+                        const isChartWidget = Boolean(chartSettings);
+                        const metricTypeForWidget =
+                          chartSettings?.metricType || widgetKey;
+                        const matchingMetrics = athleteMetrics.filter(
+                          (metric) => metric.metric_type === metricTypeForWidget
+                        );
+                        const weightGoal =
+                          athleteMetrics.find(
+                            (metric) => metric.metric_type === "weight_goal"
+                          )?.metric_value || 0;
+                        const chartMetrics = matchingMetrics
+                          .filter((metric) => metric.metric_value !== null)
+                          .slice()
+                          .reverse()
+                          .slice(-8);
+                        const chartValues = chartMetrics.map((metric) =>
+                          Number(metric.metric_value || 0)
+                        );
+                        const maxChartValue =
+                          Math.max(...chartValues, 1) || 1;
+                        const chartTotal =
+                          chartValues.reduce((sum, value) => sum + value, 0) ||
+                          1;
+                        const chartColors = [
+                          "#e879f9",
+                          "#a855f7",
+                          "#22d3ee",
+                          "#c084fc",
+                          "#f0abfc",
+                          "#7dd3fc",
+                          "#d946ef",
+                          "#38bdf8",
+                        ];
+                        let pieCursor = 0;
+                        const pieGradient = chartMetrics
+                          .map((metric, index) => {
+                            const value = Number(metric.metric_value || 0);
+                            const start = pieCursor;
+                            const end = pieCursor + (value / chartTotal) * 100;
+                            pieCursor = end;
+
+                            return `${chartColors[index % chartColors.length]} ${start}% ${end}%`;
+                          })
+                          .join(", ");
+                        const linePoints = chartMetrics
+                          .map((metric, index) => {
+                            const x =
+                              chartMetrics.length === 1
+                                ? 50
+                                : (index / (chartMetrics.length - 1)) * 100;
+                            const y =
+                              90 -
+                              (Number(metric.metric_value || 0) /
+                                maxChartValue) *
+                                75;
+
+                            return `${x},${y}`;
+                          })
+                          .join(" ");
+                        const areaPoints = linePoints
+                          ? `0,95 ${linePoints} 100,95`
+                          : "";
+                        const getChartXValue = (
+                          metric: AthleteMetric,
+                          index: number
+                        ) => {
+                          if (chartSettings?.xValue === "entry_number") {
+                            return `Entry ${index + 1}`;
+                          }
+
+                          if (chartSettings?.xValue === "metric_label") {
+                            return metric.metric_label || `Entry ${index + 1}`;
+                          }
+
+                          return metric.entry_date
+                            ? new Date(metric.entry_date).toLocaleDateString(
+                                undefined,
+                                {
+                                  month: "numeric",
+                                  day: "numeric",
+                                }
+                              )
+                            : `Entry ${index + 1}`;
+                        };
+
+                        return (
+                          <div
+                            key={widgetKey}
+                            className="rounded-3xl border border-white/10 bg-black/20 p-5"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.25em] text-sky-100/45">
+                                  Progress View
+                                </p>
+                                <h3 className="mt-2 text-xl font-bold">
+                                  {option?.label ||
+                                    chartSettings?.label ||
+                                    "Progress"}
+                                </h3>
+                              </div>
+
+                              <button
+                                onClick={() => removeProgressWidget(widgetKey)}
+                                className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/55 transition hover:bg-white hover:text-black"
+                              >
+                                Remove
+                              </button>
+                            </div>
+
+                            {widgetKey === "weight_goal" ? (
+                              <div className="mt-5 rounded-3xl border border-purple-300/25 bg-purple-500/10 p-5">
+                                <div className="flex items-center justify-between gap-4">
+                                  <p className="font-bold text-purple-100">
+                                    Goal Progress
+                                  </p>
+                                  <p className="text-sm font-bold text-purple-100">
+                                    {weightGoal}%
+                                  </p>
+                                </div>
+
+                                <div className="mt-5 h-8 overflow-hidden rounded-full border border-fuchsia-200/25 bg-black/60 shadow-[inset_0_0_18px_rgba(0,0,0,0.75),0_0_30px_rgba(168,85,247,0.28)]">
+                                  <div
+                                    className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-fuchsia-700 via-purple-500 to-cyan-300 shadow-[0_0_30px_rgba(216,180,254,0.85)]"
+                                    style={{
+                                      width: `${Math.min(
+                                        100,
+                                        Math.max(0, Number(weightGoal))
+                                      )}%`,
+                                    }}
+                                  >
+                                    <span
+                                      className="absolute -inset-x-1 -inset-y-4 opacity-90 blur-[1px]"
+                                      style={{
+                                        background:
+                                          "radial-gradient(circle at 12% 45%, rgba(244,114,182,0.95) 0 9%, transparent 20%), radial-gradient(circle at 36% 58%, rgba(192,132,252,0.95) 0 12%, transparent 25%), radial-gradient(circle at 62% 40%, rgba(34,211,238,0.85) 0 10%, transparent 23%), radial-gradient(circle at 86% 62%, rgba(217,70,239,0.9) 0 11%, transparent 24%)",
+                                        backgroundSize: "220% 180%",
+                                        animation:
+                                          "lavaDrift 5.8s ease-in-out infinite alternate",
+                                      }}
+                                    />
+                                    <span
+                                      className="absolute -inset-x-8 -inset-y-5 opacity-70 blur-sm"
+                                      style={{
+                                        background:
+                                          "radial-gradient(circle at 18% 60%, rgba(125,211,252,0.9) 0 8%, transparent 20%), radial-gradient(circle at 52% 42%, rgba(232,121,249,0.9) 0 13%, transparent 27%), radial-gradient(circle at 78% 52%, rgba(168,85,247,0.9) 0 10%, transparent 24%)",
+                                        backgroundSize: "180% 220%",
+                                        animation:
+                                          "lavaDriftReverse 7s ease-in-out infinite alternate",
+                                      }}
+                                    />
+                                    <span
+                                      className="absolute inset-0 opacity-60"
+                                      style={{
+                                        background:
+                                          "linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.65) 18%, transparent 36%)",
+                                        animation:
+                                          "lavaShimmer 2.4s linear infinite",
+                                      }}
+                                    />
+                                    <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/35 to-transparent" />
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 flex justify-between text-xs uppercase tracking-[0.18em] text-white/45">
+                                  <span>Start</span>
+                                  <span>Goal</span>
+                                </div>
+                              </div>
+                            ) : isChartWidget ? (
+                              <div className="mt-5 rounded-3xl border border-purple-300/20 bg-gradient-to-br from-purple-950/45 via-black/30 to-sky-950/35 p-5">
+                                {isCustomChart && (
+                                  <div className="mb-5 grid gap-3 md:grid-cols-3">
+                                    <select
+                                      value={customChartSettings.chartType}
+                                      onChange={(event) =>
+                                        updateCustomChartSetting(
+                                          "chartType",
+                                          event.target.value
+                                        )
+                                      }
+                                      className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-purple-200"
+                                    >
+                                      {chartTypeOptions.map((chartType) => (
+                                        <option
+                                          key={chartType.key}
+                                          value={chartType.key}
+                                        >
+                                          {chartType.label} Chart
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    <select
+                                      value={customChartSettings.xValue}
+                                      onChange={(event) =>
+                                        updateCustomChartSetting(
+                                          "xValue",
+                                          event.target.value
+                                        )
+                                      }
+                                      className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-purple-200"
+                                    >
+                                      {chartXAxisOptions.map((xOption) => (
+                                        <option
+                                          key={xOption.key}
+                                          value={xOption.key}
+                                        >
+                                          X: {xOption.label}
+                                        </option>
+                                      ))}
+                                    </select>
+
+                                    <select
+                                      value={customChartSettings.metricType}
+                                      onChange={(event) =>
+                                        updateCustomChartSetting(
+                                          "metricType",
+                                          event.target.value
+                                        )
+                                      }
+                                      className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-purple-200"
+                                    >
+                                      {chartYAxisOptions.map((yOption) => (
+                                        <option
+                                          key={yOption.key}
+                                          value={yOption.key}
+                                        >
+                                          Y: {yOption.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+
+                                {chartMetrics.length ? (
+                                  <>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <p className="text-sm font-bold text-purple-100">
+                                        {chartSettings?.yLabel || "Value"} by{" "}
+                                        {chartSettings?.xLabel || "Date"}
+                                      </p>
+                                      <p className="text-xs uppercase tracking-[0.18em] text-white/40">
+                                        {chartSettings?.chartType || "chart"}{" "}
+                                        chart
+                                      </p>
+                                    </div>
+
+                                    {chartSettings?.chartType === "line" ||
+                                    chartSettings?.chartType === "area" ||
+                                    chartSettings?.chartType === "scatter" ? (
+                                      <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-4">
+                                        <svg
+                                          viewBox="0 0 100 100"
+                                          className="h-64 w-full overflow-visible"
+                                          preserveAspectRatio="none"
+                                        >
+                                          <defs>
+                                            <linearGradient
+                                              id={`progressGlow-${widgetKey}`}
+                                              x1="0"
+                                              y1="0"
+                                              x2="1"
+                                              y2="0"
+                                            >
+                                              <stop offset="0%" stopColor="#e879f9" />
+                                              <stop offset="55%" stopColor="#a855f7" />
+                                              <stop offset="100%" stopColor="#22d3ee" />
+                                            </linearGradient>
+                                          </defs>
+                                          {[20, 40, 60, 80].map((line) => (
+                                            <line
+                                              key={line}
+                                              x1="0"
+                                              x2="100"
+                                              y1={line}
+                                              y2={line}
+                                              stroke="rgba(255,255,255,0.08)"
+                                              strokeWidth="0.4"
+                                            />
+                                          ))}
+
+                                          {chartSettings?.chartType ===
+                                            "area" && (
+                                            <polygon
+                                              points={areaPoints}
+                                              fill="rgba(168,85,247,0.28)"
+                                            />
+                                          )}
+
+                                          {chartSettings?.chartType !==
+                                            "scatter" && (
+                                            <polyline
+                                              points={linePoints}
+                                              fill="none"
+                                              stroke={`url(#progressGlow-${widgetKey})`}
+                                              strokeWidth="2.8"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          )}
+
+                                          {chartMetrics.map((metric, index) => {
+                                            const x =
+                                              chartMetrics.length === 1
+                                                ? 50
+                                                : (index /
+                                                    (chartMetrics.length - 1)) *
+                                                  100;
+                                            const y =
+                                              90 -
+                                              (Number(
+                                                metric.metric_value || 0
+                                              ) /
+                                                maxChartValue) *
+                                                75;
+
+                                            return (
+                                              <circle
+                                                key={metric.id}
+                                                cx={x}
+                                                cy={y}
+                                                r={
+                                                  chartSettings?.chartType ===
+                                                  "scatter"
+                                                    ? 3.1
+                                                    : 2.1
+                                                }
+                                                fill={
+                                                  chartColors[
+                                                    index % chartColors.length
+                                                  ]
+                                                }
+                                                stroke="rgba(255,255,255,0.75)"
+                                                strokeWidth="0.7"
+                                              />
+                                            );
+                                          })}
+                                        </svg>
+
+                                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs uppercase tracking-[0.12em] text-white/45 sm:grid-cols-4">
+                                          {chartMetrics.map((metric, index) => (
+                                            <div key={metric.id}>
+                                              {getChartXValue(metric, index)}:{" "}
+                                              {metric.metric_value}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ) : chartSettings?.chartType === "pie" ||
+                                      chartSettings?.chartType ===
+                                        "doughnut" ? (
+                                      <div className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-[220px_1fr] md:items-center">
+                                        <div
+                                          className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border border-fuchsia-200/20 shadow-[0_0_34px_rgba(168,85,247,0.35)]"
+                                          style={{
+                                            background: `conic-gradient(${pieGradient})`,
+                                          }}
+                                        >
+                                          {chartSettings?.chartType ===
+                                            "doughnut" && (
+                                            <div className="h-24 w-24 rounded-full border border-white/10 bg-[#020713]" />
+                                          )}
+                                        </div>
+
+                                        <div className="space-y-3">
+                                          {chartMetrics.map((metric, index) => (
+                                            <div
+                                              key={metric.id}
+                                              className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3"
+                                            >
+                                              <div className="flex items-center gap-3">
+                                                <span
+                                                  className="h-3 w-3 rounded-full"
+                                                  style={{
+                                                    backgroundColor:
+                                                      chartColors[
+                                                        index %
+                                                          chartColors.length
+                                                      ],
+                                                  }}
+                                                />
+                                                <span className="text-sm text-white/75">
+                                                  {getChartXValue(
+                                                    metric,
+                                                    index
+                                                  )}
+                                                </span>
+                                              </div>
+                                              <span className="font-bold text-purple-100">
+                                                {metric.metric_value}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ) : chartSettings?.chartType === "bar" ? (
+                                      <div className="mt-6 space-y-3 rounded-3xl border border-white/10 bg-black/25 p-4">
+                                        {chartMetrics.map((metric, index) => {
+                                          const value = Number(
+                                            metric.metric_value || 0
+                                          );
+                                          const width = Math.max(
+                                            7,
+                                            Math.round(
+                                              (value / maxChartValue) * 100
+                                            )
+                                          );
+
+                                          return (
+                                            <div
+                                              key={metric.id}
+                                              className="grid gap-2 sm:grid-cols-[120px_1fr_70px] sm:items-center"
+                                            >
+                                              <p className="text-xs uppercase tracking-[0.12em] text-white/45">
+                                                {getChartXValue(metric, index)}
+                                              </p>
+                                              <div className="h-7 overflow-hidden rounded-full border border-fuchsia-200/20 bg-black/50">
+                                                <div
+                                                  className="relative h-full overflow-hidden rounded-full bg-gradient-to-r from-fuchsia-700 via-purple-400 to-cyan-200 shadow-[0_0_22px_rgba(216,180,254,0.65)]"
+                                                  style={{ width: `${width}%` }}
+                                                >
+                                                  <span
+                                                    className="absolute -inset-8 opacity-80 blur-sm"
+                                                    style={{
+                                                      background:
+                                                        "radial-gradient(circle at 35% 20%, rgba(244,114,182,0.95) 0 12%, transparent 28%), radial-gradient(circle at 65% 65%, rgba(34,211,238,0.85) 0 14%, transparent 32%), radial-gradient(circle at 45% 85%, rgba(192,132,252,0.95) 0 16%, transparent 34%)",
+                                                      backgroundSize:
+                                                        "180% 220%",
+                                                      animation:
+                                                        "lavaDrift 6s ease-in-out infinite alternate",
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                              <p className="text-sm font-bold text-purple-100">
+                                                {value}
+                                              </p>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <div className="mt-6 flex h-64 items-end gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-black/25 p-4">
+                                        {chartMetrics.map((metric, index) => {
+                                          const value = Number(
+                                            metric.metric_value || 0
+                                          );
+                                          const height = Math.max(
+                                            8,
+                                            Math.round(
+                                              (value / maxChartValue) * 100
+                                            )
+                                          );
+
+                                          return (
+                                            <div
+                                              key={metric.id}
+                                              className="flex min-w-[62px] flex-1 flex-col items-center justify-end gap-3"
+                                            >
+                                              <p className="text-xs font-bold text-purple-100">
+                                                {value}
+                                              </p>
+
+                                              <div className="flex h-40 w-full items-end overflow-hidden rounded-2xl border border-fuchsia-200/20 bg-black/50 shadow-[inset_0_0_14px_rgba(0,0,0,0.7)]">
+                                                <div
+                                                  className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-t from-fuchsia-700 via-purple-400 to-cyan-200 shadow-[0_0_22px_rgba(216,180,254,0.65)]"
+                                                  style={{
+                                                    height: `${height}%`,
+                                                  }}
+                                                >
+                                                  <span
+                                                    className="absolute -inset-8 opacity-80 blur-sm"
+                                                    style={{
+                                                      background:
+                                                        "radial-gradient(circle at 35% 20%, rgba(244,114,182,0.95) 0 12%, transparent 28%), radial-gradient(circle at 65% 65%, rgba(34,211,238,0.85) 0 14%, transparent 32%), radial-gradient(circle at 45% 85%, rgba(192,132,252,0.95) 0 16%, transparent 34%)",
+                                                      backgroundSize:
+                                                        "180% 220%",
+                                                      animation:
+                                                        "lavaDrift 6s ease-in-out infinite alternate",
+                                                    }}
+                                                  />
+                                                  <span className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent" />
+                                                </div>
+                                              </div>
+
+                                              <p className="text-center text-[10px] uppercase tracking-[0.12em] text-white/45">
+                                                {getChartXValue(metric, index)}
+                                              </p>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <p className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
+                                    No chart data yet. Once Coach T adds progress
+                                    numbers, this graph will appear here.
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-5 overflow-hidden rounded-3xl border border-white/10">
+                                <table className="w-full min-w-[700px] text-left text-sm">
+                                  <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
+                                    <tr>
+                                      <th className="px-4 py-4">Date</th>
+                                      <th className="px-4 py-4">Metric</th>
+                                      <th className="px-4 py-4">Value</th>
+                                      <th className="px-4 py-4">Notes</th>
+                                    </tr>
+                                  </thead>
+
+                                  <tbody className="divide-y divide-white/10">
+                                    {matchingMetrics.length ? (
+                                      matchingMetrics.map((metric) => (
+                                        <tr
+                                          key={metric.id}
+                                          className="bg-black/20"
+                                        >
+                                          <td className="px-4 py-4 text-white/65">
+                                            {metric.entry_date}
+                                          </td>
+                                          <td className="px-4 py-4 font-bold text-sky-100">
+                                            {metric.metric_label}
+                                          </td>
+                                          <td className="px-4 py-4 text-white/65">
+                                            {metric.metric_value ?? "-"}{" "}
+                                            {metric.metric_unit || ""}
+                                          </td>
+                                          <td className="whitespace-pre-wrap px-4 py-4 text-white/65">
+                                            {metric.notes || "-"}
+                                          </td>
+                                        </tr>
+                                      ))
+                                    ) : (
+                                      <tr className="bg-black/20">
+                                        <td
+                                          className="px-4 py-5 text-white/45"
+                                          colSpan={4}
+                                        >
+                                          No entries saved for this view yet.
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
+                        Add a progress view from the dropdown.
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
 
               {activeTab === "Videos" && (
-                <DashboardCard
-                  eyebrow="Your Film Room"
-                  title="Video Analysis"
-                  text="Sprint, lift, and movement feedback will appear here."
-                />
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                    Videos
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black">Submit A Video</h2>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={videoTitle}
+                      onChange={(event) => setVideoTitle(event.target.value)}
+                      placeholder="Video title"
+                      className="rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                    />
+
+                    <input
+                      value={videoSizeMb}
+                      onChange={(event) => setVideoSizeMb(event.target.value)}
+                      placeholder="File size MB, example: 85"
+                      className="rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                    />
+                  </div>
+
+                  <input
+                    value={videoUrl}
+                    onChange={(event) => setVideoUrl(event.target.value)}
+                    placeholder="Paste your Google Drive video link"
+                    className="mt-3 w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                  />
+
+                  <textarea
+                    value={videoNotes}
+                    onChange={(event) => setVideoNotes(event.target.value)}
+                    placeholder="Tell Coach T what to review"
+                    rows={4}
+                    className="mt-3 w-full resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                  />
+
+                  <button
+                    onClick={submitVideo}
+                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
+                  >
+                    Submit Video
+                  </button>
+
+                  {videoNotice && (
+                    <p className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sky-100">
+                      {videoNotice}
+                    </p>
+                  )}
+
+                  <div className="mt-6 overflow-hidden rounded-3xl border border-white/10">
+                    <table className="w-full min-w-[700px] text-left text-sm">
+                      <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
+                        <tr>
+                          <th className="px-4 py-4">Video</th>
+                          <th className="px-4 py-4">Submitted</th>
+                          <th className="px-4 py-4">Status</th>
+                          <th className="px-4 py-4">Link</th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-white/10">
+                        {videoSubmissions.length ? (
+                          videoSubmissions.map((video) => (
+                            <tr key={video.id} className="bg-black/20">
+                              <td className="px-4 py-4">
+                                <p className="font-bold">{video.title}</p>
+                                {video.athlete_notes && (
+                                  <p className="mt-1 text-white/50">
+                                    {video.athlete_notes}
+                                  </p>
+                                )}
+                                {video.coach_feedback && (
+                                  <p className="mt-3 rounded-2xl border border-sky-100/10 bg-sky-100/5 p-3 text-sm text-sky-100/80">
+                                    {video.coach_feedback}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-4 py-4 text-white/65">
+                                {video.created_at
+                                  ? new Date(
+                                      video.created_at
+                                    ).toLocaleDateString()
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-4 capitalize text-white/65">
+                                {video.status.replace("_", " ")}
+                              </td>
+                              <td className="px-4 py-4">
+                                <a
+                                  href={video.video_url}
+                                  target="_blank"
+                                  className="font-bold text-sky-100 underline"
+                                >
+                                  Original
+                                </a>
+                                {video.reviewed_video_url && (
+                                  <a
+                                    href={video.reviewed_video_url}
+                                    target="_blank"
+                                    className="mt-2 block font-bold text-purple-100 underline"
+                                  >
+                                    Reviewed
+                                  </a>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr className="bg-black/20">
+                            <td className="px-4 py-5 text-white/45" colSpan={4}>
+                              No videos submitted yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
               {activeTab === "Updates" && (
-                <DashboardCard
-                  eyebrow="Your Next Steps"
-                  title="Updates"
-                  text="Messages, reminders, and updates from Tips With T will appear here."
-                />
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                    Updates
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black">Ask Coach T</h2>
+
+                  <textarea
+                    value={athleteQuestion}
+                    onChange={(event) => setAthleteQuestion(event.target.value)}
+                    placeholder="Ask a question about your training, video, schedule, or progress..."
+                    rows={5}
+                    className="mt-5 w-full resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-4 outline-none transition focus:border-sky-200"
+                  />
+
+                  <button
+                    onClick={submitQuestion}
+                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
+                  >
+                    Send Question
+                  </button>
+
+                  {questionNotice && (
+                    <p className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-sky-100">
+                      {questionNotice}
+                    </p>
+                  )}
+
+                  <div className="mt-6 space-y-3">
+                    {athleteQuestions.length ? (
+                      athleteQuestions.map((question) => (
+                        <div
+                          key={question.id}
+                          className="rounded-2xl border border-white/10 bg-black/25 p-4"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-xs uppercase tracking-[0.22em] text-sky-100/45">
+                              {question.created_at
+                                ? new Date(
+                                    question.created_at
+                                  ).toLocaleDateString()
+                                : "Question"}
+                            </p>
+                            <p className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-white/45">
+                              {question.status}
+                            </p>
+                          </div>
+
+                          <p className="mt-3 whitespace-pre-wrap text-white/80">
+                            {question.question}
+                          </p>
+
+                          {question.coach_answer && (
+                            <p className="mt-3 rounded-2xl border border-sky-100/10 bg-sky-100/5 p-3 text-sm text-sky-100/80">
+                              {question.coach_answer}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
+                        No questions sent yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
             </section>
 
@@ -888,6 +2492,47 @@ export default function LoginPage() {
             </aside>
           </div>
         </div>
+
+        <style jsx global>{`
+          @keyframes lavaDrift {
+            0% {
+              transform: translate3d(-18%, -8%, 0) scale(1.08);
+              background-position: 0% 45%;
+            }
+            50% {
+              transform: translate3d(10%, 10%, 0) scale(1.18);
+              background-position: 80% 55%;
+            }
+            100% {
+              transform: translate3d(22%, -6%, 0) scale(1.08);
+              background-position: 140% 45%;
+            }
+          }
+
+          @keyframes lavaDriftReverse {
+            0% {
+              transform: translate3d(20%, 10%, 0) scale(1.16);
+              background-position: 120% 55%;
+            }
+            50% {
+              transform: translate3d(-8%, -10%, 0) scale(1.05);
+              background-position: 45% 45%;
+            }
+            100% {
+              transform: translate3d(-24%, 8%, 0) scale(1.18);
+              background-position: 0% 60%;
+            }
+          }
+
+          @keyframes lavaShimmer {
+            0% {
+              transform: translateX(-130%);
+            }
+            100% {
+              transform: translateX(130%);
+            }
+          }
+        `}</style>
       </main>
     );
   }
@@ -1000,3 +2645,4 @@ function DashboardCard({
     </div>
   );
 }
+

@@ -5,63 +5,34 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function isCoach(password: string) {
-  return password && password === process.env.COACH_DASHBOARD_PASSWORD;
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const password = body.password || "";
-    const athleteId = body.athleteId || "";
+    const email = body.email?.trim().toLowerCase() || "";
+    const athleteCode = body.athleteCode?.trim() || "";
 
-    if (!isCoach(password)) {
-      return Response.json({ error: "Not allowed." }, { status: 401 });
-    }
-
-    if (!athleteId) {
-      return Response.json({ error: "Athlete is required." }, { status: 400 });
+    if (!email || !athleteCode) {
+      return Response.json(
+        { error: "Email and athlete code are required." },
+        { status: 400 }
+      );
     }
 
     const { data: athlete, error: athleteError } = await supabaseAdmin
       .from("athletes")
       .select("*")
-      .eq("id", athleteId)
+      .eq("email", email)
+      .eq("athlete_code", athleteCode)
       .single();
 
     if (athleteError || !athlete) {
-      return Response.json(
-        { error: athleteError?.message || "Could not find athlete." },
-        { status: 404 }
-      );
-    }
-
-    const { data: coachNotes, error: coachNotesError } = await supabaseAdmin
-      .from("coach_notes")
-      .select("*")
-      .eq("athlete_id", athleteId)
-      .order("note_date", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (coachNotesError) {
-      return Response.json({ error: coachNotesError.message }, { status: 500 });
-    }
-
-    const { data: trainingWeeks, error: trainingWeeksError } = await supabaseAdmin
-      .from("training_weeks")
-      .select("*")
-      .eq("athlete_id", athleteId)
-      .order("week_number", { ascending: true });
-
-    if (trainingWeeksError) {
-      return Response.json({ error: trainingWeeksError.message }, { status: 500 });
+      return Response.json({ error: "Could not find athlete." }, { status: 404 });
     }
 
     const { data: trainingDays, error: trainingDaysError } = await supabaseAdmin
       .from("training_days")
       .select("*")
-      .eq("athlete_id", athleteId)
+      .eq("athlete_id", athlete.id)
       .order("week_number", { ascending: true })
       .order("sort_order", { ascending: true });
 
@@ -73,7 +44,7 @@ export async function POST(request: Request) {
       await supabaseAdmin
         .from("athlete_metrics")
         .select("*")
-        .eq("athlete_id", athleteId)
+        .eq("athlete_id", athlete.id)
         .order("entry_date", { ascending: false })
         .limit(100);
 
@@ -88,8 +59,7 @@ export async function POST(request: Request) {
       await supabaseAdmin
         .from("video_submissions")
         .select("*")
-        .eq("athlete_id", athleteId)
-        .is("coach_archived_at", null)
+        .eq("athlete_id", athlete.id)
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -100,18 +70,31 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: athleteQuestions, error: athleteQuestionsError } =
+      await supabaseAdmin
+        .from("athlete_questions")
+        .select("*")
+        .eq("athlete_id", athlete.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+    if (athleteQuestionsError) {
+      return Response.json(
+        { error: athleteQuestionsError.message },
+        { status: 500 }
+      );
+    }
+
     return Response.json({
       success: true,
-      athlete,
-      coachNotes: coachNotes || [],
-      trainingWeeks: trainingWeeks || [],
       trainingDays: trainingDays || [],
       athleteMetrics: athleteMetrics || [],
       videoSubmissions: videoSubmissions || [],
+      athleteQuestions: athleteQuestions || [],
     });
   } catch (error: any) {
     return Response.json(
-      { error: error?.message || "Something went wrong loading the athlete file." },
+      { error: error?.message || "Could not load athlete dashboard data." },
       { status: 500 }
     );
   }
