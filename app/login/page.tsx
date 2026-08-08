@@ -260,20 +260,30 @@ type TrainingDay = {
   sort_order?: number;
 };
 
-type WorkoutCategory = "all" | "warmups" | "plyos" | "lift";
+type WorkoutCategory =
+  | "all"
+  | "warmups"
+  | "plyos"
+  | "cooldown"
+  | "lift"
+  | "workout";
 
 const workoutCategoryOptions: { key: WorkoutCategory; label: string }[] = [
   { key: "all", label: "All Sections" },
   { key: "warmups", label: "Warmups" },
   { key: "plyos", label: "Plyos" },
+  { key: "cooldown", label: "Cooldown" },
   { key: "lift", label: "Lift" },
+  { key: "workout", label: "Workout" },
 ];
 
 const workoutCategoryAliases: Record<Exclude<WorkoutCategory, "all">, string[]> =
   {
     warmups: ["warmup", "warmups", "warm up", "warm ups", "warm-up", "warm-ups"],
     plyos: ["plyo", "plyos", "plyometric", "plyometrics"],
+    cooldown: ["cooldown", "cool down", "cool-down", "recovery"],
     lift: ["lift", "lifts", "lifting", "strength", "weight room", "weights"],
+    workout: ["workout", "main workout", "conditioning", "session"],
   };
 
 function getWorkoutCategoryLabel(category: WorkoutCategory) {
@@ -313,7 +323,9 @@ function getWorkoutSections(workout?: string) {
   const sections: Record<Exclude<WorkoutCategory, "all">, string[]> = {
     warmups: [],
     plyos: [],
+    cooldown: [],
     lift: [],
+    workout: [],
   };
   let activeCategory: Exclude<WorkoutCategory, "all"> | null = null;
 
@@ -340,7 +352,9 @@ function getWorkoutSections(workout?: string) {
   return {
     warmups: sections.warmups.join("\n").trim(),
     plyos: sections.plyos.join("\n").trim(),
+    cooldown: sections.cooldown.join("\n").trim(),
     lift: sections.lift.join("\n").trim(),
+    workout: sections.workout.join("\n").trim(),
   };
 }
 

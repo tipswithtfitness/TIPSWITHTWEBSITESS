@@ -51,6 +51,124 @@ type TrainingDay = {
   sort_order?: number;
 };
 
+type WorkoutSection = "warmups" | "plyos" | "cooldown" | "lift" | "workout";
+
+const workoutSectionOptions: {
+  key: WorkoutSection;
+  label: string;
+  placeholder: string;
+}[] = [
+  {
+    key: "warmups",
+    label: "Warmups",
+    placeholder: "Warmup drills, movement prep, mobility...",
+  },
+  {
+    key: "plyos",
+    label: "Plyos",
+    placeholder: "Jumps, bounds, med ball, explosive work...",
+  },
+  {
+    key: "cooldown",
+    label: "Cooldown",
+    placeholder: "Cooldown, breathing, stretching, recovery...",
+  },
+  {
+    key: "lift",
+    label: "Lift",
+    placeholder: "Strength work, sets, reps, percentages...",
+  },
+  {
+    key: "workout",
+    label: "Workout",
+    placeholder: "Main workout, conditioning, practice work...",
+  },
+];
+
+const workoutSectionAliases: Record<WorkoutSection, string[]> = {
+  warmups: ["warmup", "warmups", "warm up", "warm ups", "warm-up", "warm-ups"],
+  plyos: ["plyo", "plyos", "plyometric", "plyometrics"],
+  cooldown: ["cooldown", "cool down", "cool-down", "recovery"],
+  lift: ["lift", "lifts", "lifting", "strength", "weight room", "weights"],
+  workout: ["workout", "main workout", "conditioning", "session"],
+};
+
+function getWorkoutSectionFromHeading(line: string) {
+  const normalizedLine = line
+    .trim()
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, "")
+    .replace(/\s+/g, " ");
+
+  for (const [section, aliases] of Object.entries(workoutSectionAliases)) {
+    for (const alias of aliases) {
+      if (
+        normalizedLine === alias ||
+        normalizedLine.startsWith(`${alias}:`) ||
+        normalizedLine.startsWith(`${alias} -`) ||
+        normalizedLine.startsWith(`${alias}--`)
+      ) {
+        return {
+          section: section as WorkoutSection,
+          remainder: line.slice(alias.length).replace(/^[:\-\s]+/, "").trim(),
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function getWorkoutSections(workout?: string) {
+  const sections: Record<WorkoutSection, string[]> = {
+    warmups: [],
+    plyos: [],
+    cooldown: [],
+    lift: [],
+    workout: [],
+  };
+  let activeSection: WorkoutSection | null = null;
+
+  String(workout || "")
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const heading = getWorkoutSectionFromHeading(line);
+
+      if (heading) {
+        activeSection = heading.section;
+
+        if (heading.remainder) {
+          sections[activeSection].push(heading.remainder);
+        }
+
+        return;
+      }
+
+      if (activeSection) {
+        sections[activeSection].push(line);
+      }
+    });
+
+  return {
+    warmups: sections.warmups.join("\n").trim(),
+    plyos: sections.plyos.join("\n").trim(),
+    cooldown: sections.cooldown.join("\n").trim(),
+    lift: sections.lift.join("\n").trim(),
+    workout: sections.workout.join("\n").trim(),
+  };
+}
+
+function formatWorkoutSections(sections: Record<WorkoutSection, string>) {
+  return workoutSectionOptions
+    .map((option) => {
+      const value = sections[option.key].trim();
+
+      return value ? `${option.label}:\n${value}` : "";
+    })
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 type AthleteMetric = {
   id: string;
   entry_date: string;
@@ -770,13 +888,37 @@ export default function CoachDashboardPage() {
 
   const updateTrainingDayDraft = (
     dayName: string,
-    field: "focus" | "workout" | "coach_notes",
+    field: "focus" | "coach_notes",
     value: string
   ) => {
     setTrainingDayDrafts((currentDays) =>
       currentDays.map((day) =>
         day.day_name === dayName ? { ...day, [field]: value } : day
       )
+    );
+  };
+
+  const updateTrainingDayWorkoutSection = (
+    dayName: string,
+    section: WorkoutSection,
+    value: string
+  ) => {
+    setTrainingDayDrafts((currentDays) =>
+      currentDays.map((day) => {
+        if (day.day_name !== dayName) {
+          return day;
+        }
+
+        const sections = getWorkoutSections(day.workout);
+
+        return {
+          ...day,
+          workout: formatWorkoutSections({
+            ...sections,
+            [section]: value,
+          }),
+        };
+      })
     );
   };
 
@@ -1858,59 +2000,76 @@ export default function CoachDashboardPage() {
                       </div>
 
                       <div className="mt-5 space-y-3">
-                        {trainingDayDrafts.map((day) => (
-                          <div
-                            key={day.day_name}
-                            className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
-                          >
-                            <p className="font-bold text-sky-100">
-                              {day.day_name}
-                            </p>
+                        {trainingDayDrafts.map((day) => {
+                          const sections = getWorkoutSections(day.workout);
 
-                            <div className="mt-3 grid gap-3 lg:grid-cols-3">
-                              <input
-                                value={day.focus || ""}
-                                onChange={(event) =>
-                                  updateTrainingDayDraft(
-                                    day.day_name,
-                                    "focus",
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="Focus"
-                                className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
-                              />
+                          return (
+                            <div
+                              key={day.day_name}
+                              className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+                            >
+                              <p className="font-bold text-sky-100">
+                                {day.day_name}
+                              </p>
 
-                              <textarea
-                                value={day.workout || ""}
-                                onChange={(event) =>
-                                  updateTrainingDayDraft(
-                                    day.day_name,
-                                    "workout",
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="Workout"
-                                rows={3}
-                                className="resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
-                              />
+                              <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1fr]">
+                                <input
+                                  value={day.focus || ""}
+                                  onChange={(event) =>
+                                    updateTrainingDayDraft(
+                                      day.day_name,
+                                      "focus",
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Focus"
+                                  className="rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
+                                />
 
-                              <textarea
-                                value={day.coach_notes || ""}
-                                onChange={(event) =>
-                                  updateTrainingDayDraft(
-                                    day.day_name,
-                                    "coach_notes",
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="Coach notes"
-                                rows={3}
-                                className="resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
-                              />
+                                <textarea
+                                  value={day.coach_notes || ""}
+                                  onChange={(event) =>
+                                    updateTrainingDayDraft(
+                                      day.day_name,
+                                      "coach_notes",
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Coach notes"
+                                  rows={3}
+                                  className="resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition focus:border-sky-200"
+                                />
+                              </div>
+
+                              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                                {workoutSectionOptions.map((option) => (
+                                  <label
+                                    key={`${day.day_name}-${option.key}`}
+                                    className="block rounded-2xl border border-white/10 bg-black/20 p-3"
+                                  >
+                                    <span className="text-xs font-bold uppercase tracking-[0.18em] text-sky-100/60">
+                                      {option.label}
+                                    </span>
+
+                                    <textarea
+                                      value={sections[option.key]}
+                                      onChange={(event) =>
+                                        updateTrainingDayWorkoutSection(
+                                          day.day_name,
+                                          option.key,
+                                          event.target.value
+                                        )
+                                      }
+                                      placeholder={option.placeholder}
+                                      rows={3}
+                                      className="mt-2 w-full resize-none rounded-2xl border border-white/15 bg-black/40 px-4 py-3 outline-none transition placeholder:text-white/30 focus:border-sky-200"
+                                    />
+                                  </label>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <button
@@ -2983,4 +3142,3 @@ export default function CoachDashboardPage() {
     </main>
   );
 }
-
