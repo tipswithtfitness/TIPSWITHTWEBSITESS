@@ -44,11 +44,11 @@ export default function Home() {
         {/* NAVBAR */}
         <nav
           onMouseEnter={pauseVideo}
-          className="flex flex-col items-center justify-between gap-4 border-b border-white/10 px-4 py-5 text-center backdrop-blur-sm sm:px-8 md:flex-row md:text-left"
+          className="flex justify-between items-center px-8 py-6 border-b border-white/10 backdrop-blur-sm"
         >
-          <h1 className="text-xl font-bold sm:text-2xl">TIPS WITH T</h1>
+          <h1 className="text-2xl font-bold">TIPS WITH T</h1>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 text-sm sm:gap-5 sm:text-base lg:gap-6 lg:text-lg">
+          <div className="flex gap-6 text-lg">
             <a href="/" className="hover:text-gray-300 transition">
               Home
             </a>
@@ -74,29 +74,23 @@ export default function Home() {
         {/* LOGO */}
         <div
           onMouseEnter={pauseVideo}
-          className="flex w-full justify-center px-4 pt-6 sm:justify-start sm:px-10 sm:pt-10"
+          className="w-full flex justify-start px-10 pt-10"
         >
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={100}
-            height={100}
-            className="h-20 w-20 sm:h-[100px] sm:w-[100px]"
-          />
+          <Image src="/logo.png" alt="Logo" width={100} height={100} />
         </div>
 
         {/* HERO SECTION */}
-        <section className="flex flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+        <section className="flex flex-col items-center justify-center text-center flex-1 px-6">
           <h1
             onMouseEnter={pauseVideo}
-            className="animate-fadeIn text-5xl font-bold sm:text-6xl lg:text-7xl"
+            className="text-7xl font-bold animate-fadeIn"
           >
             TIPS WITH T
           </h1>
 
           <p
             onMouseEnter={pauseVideo}
-            className="mt-4 max-w-xl animate-fadeIn text-lg leading-7 text-gray-100 sm:text-2xl"
+            className="text-2xl text-gray-100 mt-4 max-w-xl animate-fadeIn"
           >
             Private lessons, athletic development, and mentorship.
           </p>
@@ -104,17 +98,17 @@ export default function Home() {
             onMouseEnter={pauseVideo}
             className="flex flex-col items-center gap-5 mt-10 animate-fadeIn"
           >
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
+            <div className="flex gap-4">
               <a
                 href="/lessons"
-                className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition hover:scale-105"
+                className="bg-white text-black px-6 py-3 rounded-xl font-semibold hover:scale-105 transition"
               >
                 Book Lessons
               </a>
 
               <a
                 href="/summercamps"
-                className="rounded-xl border border-white px-6 py-3 transition hover:bg-white hover:text-black"
+                className="border border-white px-6 py-3 rounded-xl hover:bg-white hover:text-black transition"
               >
                 Summer Camps
               </a>
@@ -122,7 +116,7 @@ export default function Home() {
 
             <a
               href="/login"
-              className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-white shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:bg-white hover:text-black hover:shadow-[0_0_35px_rgba(255,255,255,0.45)] sm:px-8 sm:text-sm sm:tracking-[0.3em]"
+              className="rounded-full border border-white/30 bg-white/10 px-8 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:bg-white hover:text-black hover:shadow-[0_0_35px_rgba(255,255,255,0.45)]"
             >
               Sign In
             </a>

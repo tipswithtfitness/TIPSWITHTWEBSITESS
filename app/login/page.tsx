@@ -318,7 +318,6 @@ export default function LoginPage() {
     []
   );
   const [selectedWeek, setSelectedWeek] = useState(0);
-  const [selectedTrainingDay, setSelectedTrainingDay] = useState("all");
   const [selectedMetricType, setSelectedMetricType] =
     useState("calories_burned");
   const [selectedProgressWidget, setSelectedProgressWidget] = useState("");
@@ -904,7 +903,7 @@ export default function LoginPage() {
   // ==============================
   if (isWelcomeLoading && pendingAthlete) {
     return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4 text-white">
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white">
         <video
           autoPlay
           muted
@@ -916,8 +915,8 @@ export default function LoginPage() {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-sky-950/20" />
 
-        <div className="relative z-10 flex max-w-3xl flex-col items-center px-4 text-center sm:px-6">
-          <div className="mb-8 h-24 w-24 overflow-hidden rounded-full border border-white/25 bg-white shadow-[0_0_60px_rgba(186,230,253,0.45)] sm:h-28 sm:w-28">
+        <div className="relative z-10 flex max-w-3xl flex-col items-center px-6 text-center">
+          <div className="mb-8 h-28 w-28 overflow-hidden rounded-full border border-white/25 bg-white shadow-[0_0_60px_rgba(186,230,253,0.45)]">
             <img
               src="/bluetipswitht.png"
               alt="Tips With T"
@@ -925,20 +924,20 @@ export default function LoginPage() {
             />
           </div>
 
-          <p className="text-xs uppercase tracking-[0.28em] text-sky-100/70 sm:tracking-[0.45em]">
+          <p className="text-xs uppercase tracking-[0.45em] text-sky-100/70">
             Fetching your data
           </p>
 
-          <h1 className="mt-4 text-4xl font-black sm:text-5xl md:text-7xl">
+          <h1 className="mt-4 text-5xl font-black md:text-7xl">
             Welcome, {pendingAthlete.first_name || "Athlete"}{" "}
             {pendingAthlete.last_initial || ""}
           </h1>
 
-          <p className="mt-8 text-base uppercase tracking-[0.18em] text-sky-50/70 sm:text-lg sm:tracking-[0.3em]">
+          <p className="mt-8 text-lg uppercase tracking-[0.3em] text-sky-50/70">
             Welcome to a new day.
           </p>
 
-          <div className="mt-10 h-2 w-full max-w-72 overflow-hidden rounded-full bg-white/20">
+          <div className="mt-10 h-2 w-72 overflow-hidden rounded-full bg-white/20">
             <div className="h-full w-full origin-left animate-[loadingBar_4s_ease-in-out_forwards] rounded-full bg-sky-100" />
           </div>
 
@@ -977,15 +976,6 @@ export default function LoginPage() {
     const visibleTrainingDays = trainingDays.filter(
       (day) => Number(day.week_number) === currentWeekNumber
     );
-    const filteredTrainingDays =
-      selectedTrainingDay === "all"
-        ? visibleTrainingDays
-        : visibleTrainingDays.filter(
-            (day) => day.day_name === selectedTrainingDay
-          );
-    const selectedTrainingDayDetails = visibleTrainingDays.find(
-      (day) => day.day_name === selectedTrainingDay
-    );
 
     const videoUpdateCount = videoSubmissions.filter(
       (video) =>
@@ -1006,7 +996,7 @@ export default function LoginPage() {
       return 0;
     };
 
-    const printWorkoutSheet = (dayToPrint?: TrainingDay) => {
+    const printWorkoutSheet = () => {
       const athleteName = `${athlete.first_name || "Athlete"} ${
         athlete.last_initial || ""
       }`.trim();
@@ -1019,15 +1009,9 @@ export default function LoginPage() {
         currentWeek?.plan ||
         athlete.plan ||
         "Your week-by-week training plan will appear here once Coach T adds it.";
-      const printDays = dayToPrint
-        ? [dayToPrint]
-        : filteredTrainingDays.length
-        ? filteredTrainingDays
-        : visibleTrainingDays;
-      const isSingleDayPrint = printDays.length === 1;
 
-      const dayRows = printDays.length
-        ? printDays
+      const dayRows = visibleTrainingDays.length
+        ? visibleTrainingDays
             .map(
               (day) => `
                 <tr>
@@ -1044,26 +1028,6 @@ export default function LoginPage() {
               <td colspan="4">No Monday-Friday workout details have been added yet.</td>
             </tr>
           `;
-
-      const singleDayDetails =
-        isSingleDayPrint && printDays[0]
-          ? `
-              <section class="day-sheet">
-                <p class="eyebrow">${escapePrintHtml(printDays[0].day_name)}</p>
-                <h2>${escapePrintHtml(printDays[0].focus || "Workout Day")}</h2>
-
-                <div class="detail-block">
-                  <h3>Workout</h3>
-                  <p>${escapePrintHtml(printDays[0].workout || "-")}</p>
-                </div>
-
-                <div class="detail-block">
-                  <h3>Coach Notes</h3>
-                  <p>${escapePrintHtml(printDays[0].coach_notes || "-")}</p>
-                </div>
-              </section>
-            `
-          : "";
 
       const printWindow = window.open("", "_blank", "width=900,height=700");
 
@@ -1123,38 +1087,6 @@ export default function LoginPage() {
                 line-height: 1.65;
               }
 
-              .day-sheet {
-                margin-top: 26px;
-                padding: 24px;
-                border: 2px solid #bae6fd;
-                border-radius: 20px;
-                background: #f8fafc;
-              }
-
-              .day-sheet h2 {
-                margin-top: 8px;
-                font-size: 30px;
-              }
-
-              .detail-block {
-                margin-top: 22px;
-              }
-
-              .detail-block h3 {
-                margin: 0 0 8px;
-                color: #0369a1;
-                font-size: 13px;
-                letter-spacing: 0.16em;
-                text-transform: uppercase;
-              }
-
-              .detail-block p {
-                margin: 0;
-                white-space: pre-wrap;
-                font-size: 19px;
-                line-height: 1.7;
-              }
-
               table {
                 width: 100%;
                 margin-top: 16px;
@@ -1182,10 +1114,6 @@ export default function LoginPage() {
                 body {
                   padding: 24px;
                 }
-
-                .day-sheet {
-                  page-break-inside: avoid;
-                }
               }
             </style>
           </head>
@@ -1200,26 +1128,20 @@ export default function LoginPage() {
               <h2>${escapePrintHtml(title)}</h2>
               <div class="plan">${escapePrintHtml(plan)}</div>
 
-              ${
-                isSingleDayPrint
-                  ? singleDayDetails
-                  : `
-                    <h2>Monday-Friday Plan</h2>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Day</th>
-                          <th>Focus</th>
-                          <th>Workout</th>
-                          <th>Coach Notes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${dayRows}
-                      </tbody>
-                    </table>
-                  `
-              }
+              <h2>Monday-Friday Plan</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Focus</th>
+                    <th>Workout</th>
+                    <th>Coach Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${dayRows}
+                </tbody>
+              </table>
             </main>
           </body>
         </html>
@@ -1255,7 +1177,7 @@ export default function LoginPage() {
     );
 
     return (
-      <main className="relative min-h-screen overflow-hidden bg-[#020713] px-4 py-6 text-white sm:px-6 sm:py-10">
+      <main className="relative min-h-screen overflow-hidden bg-[#020713] px-6 py-10 text-white">
         {/* ============================== */}
         {/* SPACE BACKGROUND */}
         {/* ============================== */}
@@ -1273,18 +1195,18 @@ export default function LoginPage() {
           {/* ============================== */}
           {/* DASHBOARD HEADER */}
           {/* ============================== */}
-          <div className="relative overflow-hidden rounded-[1.5rem] border border-sky-200/20 bg-white/[0.07] p-4 shadow-[0_30px_100px_rgba(14,165,233,0.18)] backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
+          <div className="relative overflow-hidden rounded-[2rem] border border-sky-200/20 bg-white/[0.07] p-6 shadow-[0_30px_100px_rgba(14,165,233,0.18)] backdrop-blur-xl">
             <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-sky-300/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 left-10 h-72 w-72 rounded-full bg-cyan-200/10 blur-3xl" />
 
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
+              <div className="flex items-center gap-5">
                 {/* =============================
                     CLICKABLE PROFILE PHOTO
                     Athlete clicks the circle to choose a photo.
                     No profile photo URL field is shown to the athlete.
                 ============================= */}
-                <label className="group relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-sky-100/30 bg-sky-100/10 text-2xl font-black text-sky-100 shadow-[0_0_35px_rgba(125,211,252,0.25)] transition hover:border-sky-100 hover:bg-sky-100/20 sm:h-24 sm:w-24 sm:text-3xl">
+                <label className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-sky-100/30 bg-sky-100/10 text-3xl font-black text-sky-100 shadow-[0_0_35px_rgba(125,211,252,0.25)] transition hover:border-sky-100 hover:bg-sky-100/20">
                   {athlete.profile_photo_url ? (
                     <img
                       src={athlete.profile_photo_url}
@@ -1309,10 +1231,10 @@ export default function LoginPage() {
                 </label>
 
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/60 sm:tracking-[0.35em]">
+                  <p className="text-xs uppercase tracking-[0.35em] text-sky-100/60">
                     Tips With T Athlete Database
                   </p>
-                  <h1 className="mt-2 text-3xl font-black sm:text-4xl">
+                  <h1 className="mt-2 text-4xl font-black">
                     {athlete.first_name || "Athlete"}{" "}
                     {athlete.last_initial || ""}
                   </h1>
@@ -1324,7 +1246,7 @@ export default function LoginPage() {
 
               <div className="flex flex-col gap-3 md:items-end">
                 <div className="rounded-2xl border border-sky-100/20 bg-sky-100/10 px-5 py-3 text-left md:text-right">
-                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/55 sm:tracking-[0.28em]">
+                  <p className="text-xs uppercase tracking-[0.28em] text-sky-100/55">
                     Athlete Code
                   </p>
                   <p className="mt-1 font-bold tracking-[0.12em] text-sky-100">
@@ -1348,7 +1270,7 @@ export default function LoginPage() {
             {/* ============================== */}
             {/* MAIN DASHBOARD TABS */}
             {/* ============================== */}
-            <div className="relative -mx-4 mt-6 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-8 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+            <div className="relative mt-8 flex flex-wrap gap-3">
               {tabs.map((tab) => {
                 const badgeCount = getTabBadgeCount(tab);
 
@@ -1356,7 +1278,7 @@ export default function LoginPage() {
                   <button
                     key={tab}
                     onClick={() => changeTab(tab)}
-                    className={`relative inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition duration-300 sm:px-5 sm:text-sm sm:tracking-[0.18em] ${
+                    className={`relative inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm uppercase tracking-[0.18em] transition duration-300 ${
                       activeTab === tab
                         ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.42)]"
                         : "border border-white/15 bg-white/5 text-white/70 hover:border-sky-200/50 hover:bg-sky-200/10 hover:text-white"
@@ -1383,11 +1305,11 @@ export default function LoginPage() {
             {/* ============================== */}
             {/* DAILY GENERATED ATHLETE FACT */}
             {/* ============================== */}
-            <div className="relative mt-6 rounded-3xl border border-sky-200/20 bg-sky-300/10 p-4 sm:p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-sky-100/70 sm:tracking-[0.3em]">
+            <div className="relative mt-6 rounded-3xl border border-sky-200/20 bg-sky-300/10 p-5">
+              <p className="text-xs uppercase tracking-[0.3em] text-sky-100/70">
                 Daily Athlete Science Fact
               </p>
-              <p className="mt-2 text-base leading-7 text-white/85 sm:text-lg">
+              <p className="mt-2 text-lg leading-7 text-white/85">
                 {dailyFact || "Generating today's fact..."}
               </p>
             </div>
@@ -1396,75 +1318,62 @@ export default function LoginPage() {
           {/* ============================== */}
           {/* MAIN CONTENT + COACH NOTES LAYOUT */}
           {/* ============================== */}
-          <div className="mt-6 grid gap-5 sm:mt-8 lg:grid-cols-[1fr_360px]">
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
             {/* ============================== */}
             {/* LEFT MAIN CONTENT PANEL */}
             {/* ============================== */}
-            <section className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-[2rem] sm:border sm:border-sky-100/15 sm:bg-white/[0.045] sm:p-8 sm:shadow-[0_20px_80px_rgba(0,0,0,0.35)] sm:backdrop-blur-xl">
+            <section className="rounded-[2rem] border border-sky-100/15 bg-white/[0.045] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
               {/* ============================== */}
               {/* TRAINING TAB - DEFAULT FIRST VIEW */}
               {/* ============================== */}
               {activeTab === "Training" && (
-                <div className="relative overflow-hidden rounded-[1.25rem] border border-sky-100/15 bg-gradient-to-br from-sky-950/70 via-[#061526] to-black p-4 sm:rounded-[1.75rem] sm:p-6">
+                <div className="relative overflow-hidden rounded-[1.75rem] border border-sky-100/15 bg-gradient-to-br from-sky-950/70 via-[#061526] to-black p-6">
                   <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-cyan-200/20 blur-3xl" />
                   <div className="pointer-events-none absolute bottom-0 left-0 h-32 w-full bg-gradient-to-t from-sky-200/10 to-transparent" />
 
                   <div className="relative">
-                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-sky-100/50 sm:tracking-[0.35em]">
-                          Training Plan
-                        </p>
-                        <h2 className="mt-3 text-3xl font-black sm:text-4xl">
-                          {currentWeek
-                            ? `Week ${currentWeek.week_number}`
-                            : "Your First Week"}
-                        </h2>
-                        <p className="mt-3 max-w-2xl text-white/60">
-                          A clear week-by-week space for your work, focus, and
-                          next opportunity.
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          printWorkoutSheet(selectedTrainingDayDetails)
-                        }
-                        title={
-                          selectedTrainingDayDetails
-                            ? `Print ${selectedTrainingDayDetails.day_name}`
-                            : "Print workout sheet"
-                        }
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
+                    <button
+                      onClick={printWorkoutSheet}
+                      title="Print workout sheet"
+                      className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="h-5 w-5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M6 9V2h12v7" />
-                          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                          <path d="M6 14h12v8H6z" />
-                        </svg>
-                        <span className="sr-only">Print workout sheet</span>
-                      </button>
-                    </div>
+                        <path d="M6 9V2h12v7" />
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                        <path d="M6 14h12v8H6z" />
+                      </svg>
+                      <span className="sr-only">Print workout sheet</span>
+                    </button>
+
+                    <p className="text-xs uppercase tracking-[0.35em] text-sky-100/50">
+                      Training Plan
+                    </p>
+                    <h2 className="mt-3 text-4xl font-black">
+                      {currentWeek
+                        ? `Week ${currentWeek.week_number}`
+                        : "Your First Week"}
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-white/60">
+                      A clear week-by-week space for your work, focus, and next
+                      opportunity.
+                    </p>
 
                     {trainingWeeks.length > 0 && (
-                      <div className="-mx-4 mt-6 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-8 sm:flex-wrap sm:px-0 sm:pb-0">
+                      <div className="mt-8 flex flex-wrap gap-3">
                         {trainingWeeks.map((week, index) => (
                           <button
                             key={week.id}
-                            onClick={() => {
-                              setSelectedWeek(index);
-                              setSelectedTrainingDay("all");
-                            }}
-                            className={`shrink-0 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition sm:px-5 sm:text-sm sm:tracking-[0.18em] ${
+                            onClick={() => setSelectedWeek(index)}
+                            className={`rounded-full px-5 py-2 text-sm uppercase tracking-[0.18em] transition ${
                               selectedWeek === index
                                 ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.35)]"
                                 : "border border-sky-100/15 bg-white/5 text-white/65 hover:bg-sky-100/10"
@@ -1476,17 +1385,17 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.07] p-4 sm:mt-8 sm:p-6">
-                      <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.28em]">
+                    <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.07] p-6">
+                      <p className="text-xs uppercase tracking-[0.28em] text-sky-100/50">
                         Focus
                       </p>
-                      <h3 className="mt-2 text-xl font-bold sm:text-2xl">
+                      <h3 className="mt-2 text-2xl font-bold">
                         {currentWeek?.title ||
                           currentWeek?.focus ||
                           "Plan coming soon"}
                       </h3>
 
-                      <p className="mt-4 whitespace-pre-line text-base leading-7 text-white/78 sm:mt-5 sm:text-lg sm:leading-8">
+                      <p className="mt-5 whitespace-pre-line text-lg leading-8 text-white/78">
                         {currentWeek?.plan ||
                           athlete.plan ||
                           "Your week-by-week training plan will appear here once Coach T adds it."}
@@ -1494,181 +1403,36 @@ export default function LoginPage() {
                     </div>
 
                     {visibleTrainingDays.length > 0 && (
-                      <div className="mt-6">
-                        <div className="rounded-3xl border border-sky-100/15 bg-white/[0.06] p-4">
-                          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.22em] text-sky-100/50 sm:tracking-[0.28em]">
-                                Workout Sections
-                              </p>
-                              <p className="mt-1 text-sm text-white/55">
-                                Choose the day you want to review or print.
-                              </p>
-                            </div>
+                      <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05]">
+                        <table className="w-full min-w-[720px] text-left text-sm">
+                          <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
+                            <tr>
+                              <th className="px-4 py-4">Day</th>
+                              <th className="px-4 py-4">Focus</th>
+                              <th className="px-4 py-4">Workout</th>
+                              <th className="px-4 py-4">Coach Notes</th>
+                            </tr>
+                          </thead>
 
-                            <button
-                              onClick={() =>
-                                printWorkoutSheet(selectedTrainingDayDetails)
-                              }
-                              className="rounded-full border border-sky-100/25 bg-sky-100 px-5 py-2 text-sm font-bold uppercase tracking-[0.12em] text-black transition hover:bg-white sm:tracking-[0.14em]"
-                            >
-                              {selectedTrainingDayDetails
-                                ? `Print ${selectedTrainingDayDetails.day_name}`
-                                : "Print All Days"}
-                            </button>
-                          </div>
-
-                          <div className="-mx-4 mt-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
-                            <button
-                              onClick={() => setSelectedTrainingDay("all")}
-                              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
-                                selectedTrainingDay === "all"
-                                  ? "bg-sky-100 text-black"
-                                  : "border border-white/15 bg-white/5 text-white/65 hover:bg-white/10"
-                              }`}
-                            >
-                              All Days
-                            </button>
-
+                          <tbody className="divide-y divide-white/10">
                             {visibleTrainingDays.map((day) => (
-                              <button
-                                key={`filter-${day.id || day.day_name}`}
-                                onClick={() =>
-                                  setSelectedTrainingDay(day.day_name)
-                                }
-                                className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
-                                  selectedTrainingDay === day.day_name
-                                    ? "bg-sky-100 text-black"
-                                    : "border border-white/15 bg-white/5 text-white/65 hover:bg-white/10"
-                                }`}
-                              >
-                                {day.day_name}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="mt-5 space-y-4 md:hidden">
-                          {filteredTrainingDays.map((day) => (
-                            <section
-                              key={`mobile-${day.id || day.day_name}`}
-                              className="rounded-3xl border border-white/10 bg-white/[0.07] p-5"
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50">
-                                    {day.day_name}
-                                  </p>
-                                  <h3 className="mt-2 text-xl font-bold text-sky-100">
-                                    {day.focus || "Workout Day"}
-                                  </h3>
-                                </div>
-
-                                <button
-                                  onClick={() => printWorkoutSheet(day)}
-                                  title={`Print ${day.day_name}`}
-                                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
-                                >
-                                  <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 24 24"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M6 9V2h12v7" />
-                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                                    <path d="M6 14h12v8H6z" />
-                                  </svg>
-                                  <span className="sr-only">
-                                    Print {day.day_name}
-                                  </span>
-                                </button>
-                              </div>
-
-                              <div className="mt-5 space-y-5">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-white/40">
-                                    Workout
-                                  </p>
-                                  <p className="mt-2 whitespace-pre-wrap text-base leading-7 text-white/78">
-                                    {day.workout || "-"}
-                                  </p>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-white/40">
-                                    Coach Notes
-                                  </p>
-                                  <p className="mt-2 whitespace-pre-wrap text-base leading-7 text-white/78">
-                                    {day.coach_notes || "-"}
-                                  </p>
-                                </div>
-                              </div>
-                            </section>
-                          ))}
-                        </div>
-
-                        <div className="mt-5 hidden overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.05] md:block">
-                          <table className="w-full min-w-[840px] text-left text-sm">
-                            <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
-                              <tr>
-                                <th className="px-4 py-4">Day</th>
-                                <th className="px-4 py-4">Focus</th>
-                                <th className="px-4 py-4">Workout</th>
-                                <th className="px-4 py-4">Coach Notes</th>
-                                <th className="px-4 py-4">Print</th>
+                              <tr key={day.id || day.day_name}>
+                                <td className="px-4 py-4 font-bold text-sky-100">
+                                  {day.day_name}
+                                </td>
+                                <td className="px-4 py-4 text-white/70">
+                                  {day.focus || "-"}
+                                </td>
+                                <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                  {day.workout || "-"}
+                                </td>
+                                <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                  {day.coach_notes || "-"}
+                                </td>
                               </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-white/10">
-                              {filteredTrainingDays.map((day) => (
-                                <tr key={day.id || day.day_name}>
-                                  <td className="px-4 py-4 font-bold text-sky-100">
-                                    {day.day_name}
-                                  </td>
-                                  <td className="px-4 py-4 text-white/70">
-                                    {day.focus || "-"}
-                                  </td>
-                                  <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
-                                    {day.workout || "-"}
-                                  </td>
-                                  <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
-                                    {day.coach_notes || "-"}
-                                  </td>
-                                  <td className="px-4 py-4">
-                                    <button
-                                      onClick={() => printWorkoutSheet(day)}
-                                      title={`Print ${day.day_name}`}
-                                      className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
-                                    >
-                                      <svg
-                                        aria-hidden="true"
-                                        viewBox="0 0 24 24"
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <path d="M6 9V2h12v7" />
-                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                                        <path d="M6 14h12v8H6z" />
-                                      </svg>
-                                      <span className="sr-only">
-                                        Print {day.day_name}
-                                      </span>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     )}
                   </div>
@@ -1680,9 +1444,7 @@ export default function LoginPage() {
               {/* ============================== */}
               {activeTab === "Profile" && (
                 <div>
-                  <h2 className="text-2xl font-bold sm:text-3xl">
-                    Your Profile
-                  </h2>
+                  <h2 className="text-3xl font-bold">Your Profile</h2>
                   <p className="mb-8 mt-2 text-white/50">
                     Add details that make your athlete space feel like yours.
                   </p>
@@ -1735,7 +1497,7 @@ export default function LoginPage() {
                   {/* PROFILE WIDGET MENU */}
                   {/* ============================== */}
                   <div className="mt-8 rounded-3xl border border-sky-100/15 bg-white/[0.05] p-5">
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-100/55 sm:tracking-[0.28em]">
+                    <p className="text-xs uppercase tracking-[0.28em] text-sky-100/55">
                       Add More To Your Profile
                     </p>
 
@@ -1756,7 +1518,7 @@ export default function LoginPage() {
                       {selectedWidget && (
                         <button
                           onClick={addProfileWidget}
-                          className="rounded-full border border-green-300/30 bg-green-300/10 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-green-100 transition hover:bg-green-300 hover:text-black hover:shadow-[0_0_30px_rgba(134,239,172,0.35)] sm:px-6 sm:py-4 sm:tracking-[0.2em]"
+                          className="rounded-full border border-green-300/30 bg-green-300/10 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-green-100 transition hover:bg-green-300 hover:text-black hover:shadow-[0_0_30px_rgba(134,239,172,0.35)]"
                         >
                           Add To Profile
                         </button>
@@ -1791,7 +1553,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={updateProfile}
-                    className="mt-6 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.16em] text-black transition hover:scale-[1.02] sm:px-8 sm:tracking-[0.25em]"
+                    className="mt-6 rounded-full bg-sky-100 px-8 py-4 font-bold uppercase tracking-[0.25em] text-black transition hover:scale-[1.02]"
                   >
                     Save Profile
                   </button>
@@ -1807,9 +1569,7 @@ export default function LoginPage() {
               {/* ============================== */}
               {activeTab === "Application" && (
                 <div>
-                  <h2 className="text-2xl font-bold sm:text-3xl">
-                    Application Snapshot
-                  </h2>
+                  <h2 className="text-3xl font-bold">Application Snapshot</h2>
                   <p className="mb-8 mt-2 text-white/50">
                     These are the details from your original lesson request.
                   </p>
@@ -1821,12 +1581,10 @@ export default function LoginPage() {
                           key={label}
                           className="rounded-3xl border border-sky-100/15 bg-white/[0.06] p-5"
                         >
-                          <p className="text-xs uppercase tracking-[0.16em] text-sky-100/55 sm:tracking-[0.25em]">
+                          <p className="text-xs uppercase tracking-[0.25em] text-sky-100/55">
                             {label}
                           </p>
-                          <p className="mt-2 text-base leading-7 text-white/85 sm:text-lg">
-                            {value}
-                          </p>
+                          <p className="mt-2 text-lg text-white/85">{value}</p>
                         </div>
                       ))
                     ) : (
@@ -1843,10 +1601,10 @@ export default function LoginPage() {
               {/* PROGRESS / VIDEOS / UPDATES TABS */}
               {/* ============================== */}
               {activeTab === "Progress" && (
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
+                      <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
                         Progress
                       </p>
                       <h2 className="mt-2 text-2xl font-black">
@@ -1885,7 +1643,7 @@ export default function LoginPage() {
 
                     <button
                       onClick={addProgressWidget}
-                      className="rounded-full border border-purple-200/30 bg-purple-300/10 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-purple-100 transition hover:bg-purple-200 hover:text-black sm:px-6 sm:tracking-[0.2em]"
+                      className="rounded-full border border-purple-200/30 bg-purple-300/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-purple-100 transition hover:bg-purple-200 hover:text-black"
                     >
                       Add View
                     </button>
@@ -2010,7 +1768,7 @@ export default function LoginPage() {
                           >
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-sky-100/45 sm:tracking-[0.25em]">
+                                <p className="text-xs uppercase tracking-[0.25em] text-sky-100/45">
                                   Progress View
                                 </p>
                                 <h3 className="mt-2 text-xl font-bold">
@@ -2022,7 +1780,7 @@ export default function LoginPage() {
 
                               <button
                                 onClick={() => removeProgressWidget(widgetKey)}
-                                className="rounded-full border border-white/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white/55 transition hover:bg-white hover:text-black sm:px-4 sm:tracking-[0.16em]"
+                                className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/55 transition hover:bg-white hover:text-black"
                               >
                                 Remove
                               </button>
@@ -2172,7 +1930,7 @@ export default function LoginPage() {
                                       <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-4">
                                         <svg
                                           viewBox="0 0 100 100"
-                                          className="h-52 w-full overflow-visible sm:h-64"
+                                          className="h-64 w-full overflow-visible"
                                           preserveAspectRatio="none"
                                         >
                                           <defs>
@@ -2272,14 +2030,14 @@ export default function LoginPage() {
                                         "doughnut" ? (
                                       <div className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-[220px_1fr] md:items-center">
                                         <div
-                                          className="mx-auto flex h-40 w-40 items-center justify-center rounded-full border border-fuchsia-200/20 shadow-[0_0_34px_rgba(168,85,247,0.35)] sm:h-52 sm:w-52"
+                                          className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border border-fuchsia-200/20 shadow-[0_0_34px_rgba(168,85,247,0.35)]"
                                           style={{
                                             background: `conic-gradient(${pieGradient})`,
                                           }}
                                         >
                                           {chartSettings?.chartType ===
                                             "doughnut" && (
-                                            <div className="h-20 w-20 rounded-full border border-white/10 bg-[#020713] sm:h-24 sm:w-24" />
+                                            <div className="h-24 w-24 rounded-full border border-white/10 bg-[#020713]" />
                                           )}
                                         </div>
 
@@ -2361,7 +2119,7 @@ export default function LoginPage() {
                                         })}
                                       </div>
                                     ) : (
-                                      <div className="mt-6 flex h-56 items-end gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-black/25 p-4 sm:h-64">
+                                      <div className="mt-6 flex h-64 items-end gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-black/25 p-4">
                                         {chartMetrics.map((metric, index) => {
                                           const value = Number(
                                             metric.metric_value || 0
@@ -2421,7 +2179,7 @@ export default function LoginPage() {
                                 )}
                               </div>
                             ) : (
-                              <div className="mt-5 overflow-x-auto rounded-3xl border border-white/10">
+                              <div className="mt-5 overflow-hidden rounded-3xl border border-white/10">
                                 <table className="w-full min-w-[700px] text-left text-sm">
                                   <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                                     <tr>
@@ -2481,8 +2239,8 @@ export default function LoginPage() {
               )}
 
               {activeTab === "Videos" && (
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
-                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
                     Videos
                   </p>
                   <h2 className="mt-2 text-2xl font-black">Submit A Video</h2>
@@ -2524,7 +2282,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={submitVideo}
-                    className="mt-4 rounded-full bg-sky-100 px-5 py-4 font-bold uppercase tracking-[0.14em] text-black transition hover:bg-white sm:px-6 sm:tracking-[0.2em]"
+                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
                   >
                     Submit Video
                   </button>
@@ -2535,67 +2293,7 @@ export default function LoginPage() {
                     </p>
                   )}
 
-                  <div className="mt-6 space-y-4 md:hidden">
-                    {videoSubmissions.length ? (
-                      videoSubmissions.map((video) => (
-                        <section
-                          key={`mobile-video-${video.id}`}
-                          className="rounded-3xl border border-white/10 bg-black/20 p-4"
-                        >
-                          <div className="flex flex-col gap-2">
-                            <p className="font-bold text-sky-100">
-                              {video.title}
-                            </p>
-                            <p className="text-xs uppercase tracking-[0.14em] text-white/45">
-                              {video.created_at
-                                ? new Date(
-                                    video.created_at
-                                  ).toLocaleDateString()
-                                : "Submitted"}{" "}
-                              · {video.status.replace("_", " ")}
-                            </p>
-                          </div>
-
-                          {video.athlete_notes && (
-                            <p className="mt-3 text-sm leading-6 text-white/60">
-                              {video.athlete_notes}
-                            </p>
-                          )}
-
-                          {video.coach_feedback && (
-                            <p className="mt-3 rounded-2xl border border-sky-100/10 bg-sky-100/5 p-3 text-sm leading-6 text-sky-100/80">
-                              {video.coach_feedback}
-                            </p>
-                          )}
-
-                          <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
-                            <a
-                              href={video.video_url}
-                              target="_blank"
-                              className="rounded-full border border-sky-100/25 px-4 py-2 text-sky-100"
-                            >
-                              Original
-                            </a>
-                            {video.reviewed_video_url && (
-                              <a
-                                href={video.reviewed_video_url}
-                                target="_blank"
-                                className="rounded-full border border-purple-100/25 px-4 py-2 text-purple-100"
-                              >
-                                Reviewed
-                              </a>
-                            )}
-                          </div>
-                        </section>
-                      ))
-                    ) : (
-                      <p className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
-                        No videos submitted yet.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mt-6 hidden overflow-x-auto rounded-3xl border border-white/10 md:block">
+                  <div className="mt-6 overflow-hidden rounded-3xl border border-white/10">
                     <table className="w-full min-w-[700px] text-left text-sm">
                       <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                         <tr>
@@ -2667,8 +2365,8 @@ export default function LoginPage() {
               )}
 
               {activeTab === "Updates" && (
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
-                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
                     Updates
                   </p>
                   <h2 className="mt-2 text-2xl font-black">Ask Coach T</h2>
@@ -2683,7 +2381,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={submitQuestion}
-                    className="mt-4 rounded-full bg-sky-100 px-5 py-4 font-bold uppercase tracking-[0.14em] text-black transition hover:bg-white sm:px-6 sm:tracking-[0.2em]"
+                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
                   >
                     Send Question
                   </button>
@@ -2738,7 +2436,7 @@ export default function LoginPage() {
             {/* ============================== */}
             {/* RIGHT SIDE COACH NOTES PANEL */}
             {/* ============================== */}
-            <aside className="rounded-[1.5rem] border border-sky-100/20 bg-white/[0.06] p-4 shadow-[0_20px_70px_rgba(14,165,233,0.14)] backdrop-blur-xl sm:rounded-[2rem] sm:p-5 lg:sticky lg:top-8 lg:self-start">
+            <aside className="rounded-[2rem] border border-sky-100/20 bg-white/[0.06] p-5 shadow-[0_20px_70px_rgba(14,165,233,0.14)] backdrop-blur-xl lg:sticky lg:top-8 lg:self-start">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 overflow-hidden rounded-full border border-sky-100/25 bg-white shadow-[0_0_25px_rgba(186,230,253,0.24)]">
                   <img
@@ -2749,7 +2447,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-sky-100/55 sm:tracking-[0.28em]">
+                  <p className="text-xs uppercase tracking-[0.28em] text-sky-100/55">
                     Coach Notes
                   </p>
                   <h3 className="text-xl font-bold">From Coach T</h3>
@@ -2765,7 +2463,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="mt-4 max-h-none space-y-4 overflow-visible pr-0 lg:max-h-[420px] lg:overflow-y-auto lg:pr-1">
+              <div className="mt-4 max-h-[420px] space-y-4 overflow-y-auto pr-1">
                 {coachNotes.length > 0 ? (
                   coachNotes.map((note) => (
                     <div
@@ -2849,7 +2547,7 @@ export default function LoginPage() {
   // Clicking Open Database also submits the same form.
   // ==============================
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020713] px-4 py-8 text-white sm:px-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020713] px-6 text-white">
       <div
         className="pointer-events-none absolute inset-0 opacity-60"
         style={{
@@ -2860,14 +2558,12 @@ export default function LoginPage() {
         }}
       />
 
-      <div className="relative w-full max-w-md rounded-[1.5rem] border border-sky-100/20 bg-white/5 p-5 shadow-[0_25px_90px_rgba(14,165,233,0.18)] backdrop-blur-xl sm:rounded-[2rem] sm:p-8">
-        <p className="text-center text-xs uppercase tracking-[0.24em] text-sky-100/55 sm:tracking-[0.35em]">
+      <div className="relative w-full max-w-md rounded-[2rem] border border-sky-100/20 bg-white/5 p-8 shadow-[0_25px_90px_rgba(14,165,233,0.18)] backdrop-blur-xl">
+        <p className="text-center text-xs uppercase tracking-[0.35em] text-sky-100/55">
           Tips With T
         </p>
 
-        <h1 className="mt-3 text-center text-3xl font-bold sm:text-4xl">
-          Athlete Log In
-        </h1>
+        <h1 className="mt-3 text-center text-4xl font-bold">Athlete Log In</h1>
 
         <p className="mt-3 text-center text-sm text-white/50">
           Enter the email and athlete code you received after submitting your
@@ -2894,7 +2590,7 @@ export default function LoginPage() {
             placeholder="Example: TIPS-DEMO-2026"
             value={athleteCode}
             onChange={(e) => setAthleteCode(e.target.value.toUpperCase())}
-            className="w-full rounded-2xl border border-white/15 bg-white/10 px-5 py-4 tracking-[0.06em] outline-none placeholder:text-white/35 focus:border-sky-200 sm:tracking-[0.12em]"
+            className="w-full rounded-2xl border border-white/15 bg-white/10 px-5 py-4 tracking-[0.12em] outline-none placeholder:text-white/35 focus:border-sky-200"
           />
 
           {/* ==============================
@@ -2920,7 +2616,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.16em] text-black transition hover:scale-[1.02] disabled:opacity-50 sm:tracking-[0.25em]"
+            className="w-full rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.25em] text-black transition hover:scale-[1.02] disabled:opacity-50"
           >
             {loading ? "Checking..." : "Open Database"}
           </button>
@@ -2943,17 +2639,14 @@ function DashboardCard({
   text: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-sky-100/15 bg-white/[0.06] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)] sm:p-8">
+    <div className="relative overflow-hidden rounded-3xl border border-sky-100/15 bg-white/[0.06] p-8 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
       <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-sky-300/10 blur-3xl" />
-      <p className="relative text-xs uppercase tracking-[0.22em] text-sky-100/45 sm:tracking-[0.35em]">
+      <p className="relative text-xs uppercase tracking-[0.35em] text-sky-100/45">
         {eyebrow}
       </p>
-      <h2 className="relative mt-3 text-3xl font-black sm:text-4xl">
-        {title}
-      </h2>
-      <p className="relative mt-5 text-base leading-7 text-white/65 sm:text-lg sm:leading-8">
-        {text}
-      </p>
+      <h2 className="relative mt-3 text-4xl font-black">{title}</h2>
+      <p className="relative mt-5 text-lg leading-8 text-white/65">{text}</p>
     </div>
   );
 }
+

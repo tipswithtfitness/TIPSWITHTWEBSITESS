@@ -1922,7 +1922,7 @@ export default function CoachDashboardPage() {
                       </button>
                     </div>
 
-                    <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10">
+                    <div className="mt-6 overflow-hidden rounded-3xl border border-white/10">
                       <table className="w-full min-w-[760px] text-left text-sm">
                         <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                           <tr>
@@ -2137,7 +2137,7 @@ export default function CoachDashboardPage() {
                       </button>
                     </div>
 
-                    <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10">
+                    <div className="mt-6 overflow-hidden rounded-3xl border border-white/10">
                       <table className="w-full min-w-[780px] text-left text-sm">
                         <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                           <tr>
@@ -2675,7 +2675,7 @@ export default function CoachDashboardPage() {
                   </div>
                 )}
 
-                <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10">
+                <div className="mt-6 overflow-hidden rounded-3xl border border-white/10">
                   <table className="w-full min-w-[760px] text-left text-sm">
                     <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                       <tr>
