@@ -1348,7 +1348,7 @@ export default function LoginPage() {
             {/* ============================== */}
             {/* MAIN DASHBOARD TABS */}
             {/* ============================== */}
-            <div className="relative mt-8 flex flex-wrap gap-2 sm:gap-3">
+            <div className="relative -mx-4 mt-6 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-8 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
               {tabs.map((tab) => {
                 const badgeCount = getTabBadgeCount(tab);
 
@@ -1356,7 +1356,7 @@ export default function LoginPage() {
                   <button
                     key={tab}
                     onClick={() => changeTab(tab)}
-                    className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition duration-300 sm:px-5 sm:text-sm sm:tracking-[0.18em] ${
+                    className={`relative inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition duration-300 sm:px-5 sm:text-sm sm:tracking-[0.18em] ${
                       activeTab === tab
                         ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.42)]"
                         : "border border-white/15 bg-white/5 text-white/70 hover:border-sky-200/50 hover:bg-sky-200/10 hover:text-white"
@@ -1396,11 +1396,11 @@ export default function LoginPage() {
           {/* ============================== */}
           {/* MAIN CONTENT + COACH NOTES LAYOUT */}
           {/* ============================== */}
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="mt-6 grid gap-5 sm:mt-8 lg:grid-cols-[1fr_360px]">
             {/* ============================== */}
             {/* LEFT MAIN CONTENT PANEL */}
             {/* ============================== */}
-            <section className="rounded-[1.5rem] border border-sky-100/15 bg-white/[0.045] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:rounded-[2rem] sm:p-8">
+            <section className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-[2rem] sm:border sm:border-sky-100/15 sm:bg-white/[0.045] sm:p-8 sm:shadow-[0_20px_80px_rgba(0,0,0,0.35)] sm:backdrop-blur-xl">
               {/* ============================== */}
               {/* TRAINING TAB - DEFAULT FIRST VIEW */}
               {/* ============================== */}
@@ -1456,7 +1456,7 @@ export default function LoginPage() {
                     </div>
 
                     {trainingWeeks.length > 0 && (
-                      <div className="mt-8 flex flex-wrap gap-3">
+                      <div className="-mx-4 mt-6 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:mt-8 sm:flex-wrap sm:px-0 sm:pb-0">
                         {trainingWeeks.map((week, index) => (
                           <button
                             key={week.id}
@@ -1464,7 +1464,7 @@ export default function LoginPage() {
                               setSelectedWeek(index);
                               setSelectedTrainingDay("all");
                             }}
-                            className={`rounded-full px-5 py-2 text-sm uppercase tracking-[0.18em] transition ${
+                            className={`shrink-0 rounded-full px-4 py-2 text-xs uppercase tracking-[0.12em] transition sm:px-5 sm:text-sm sm:tracking-[0.18em] ${
                               selectedWeek === index
                                 ? "bg-sky-100 text-black shadow-[0_0_30px_rgba(186,230,253,0.35)]"
                                 : "border border-sky-100/15 bg-white/5 text-white/65 hover:bg-sky-100/10"
@@ -1476,17 +1476,17 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.07] p-6">
-                      <p className="text-xs uppercase tracking-[0.28em] text-sky-100/50">
+                    <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.07] p-4 sm:mt-8 sm:p-6">
+                      <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.28em]">
                         Focus
                       </p>
-                      <h3 className="mt-2 text-2xl font-bold">
+                      <h3 className="mt-2 text-xl font-bold sm:text-2xl">
                         {currentWeek?.title ||
                           currentWeek?.focus ||
                           "Plan coming soon"}
                       </h3>
 
-                      <p className="mt-5 whitespace-pre-line text-lg leading-8 text-white/78">
+                      <p className="mt-4 whitespace-pre-line text-base leading-7 text-white/78 sm:mt-5 sm:text-lg sm:leading-8">
                         {currentWeek?.plan ||
                           athlete.plan ||
                           "Your week-by-week training plan will appear here once Coach T adds it."}
@@ -1518,10 +1518,10 @@ export default function LoginPage() {
                             </button>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-2">
+                          <div className="-mx-4 mt-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
                             <button
                               onClick={() => setSelectedTrainingDay("all")}
-                              className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
+                              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
                                 selectedTrainingDay === "all"
                                   ? "bg-sky-100 text-black"
                                   : "border border-white/15 bg-white/5 text-white/65 hover:bg-white/10"
@@ -1536,7 +1536,7 @@ export default function LoginPage() {
                                 onClick={() =>
                                   setSelectedTrainingDay(day.day_name)
                                 }
-                                className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
+                                className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:tracking-[0.14em] ${
                                   selectedTrainingDay === day.day_name
                                     ? "bg-sky-100 text-black"
                                     : "border border-white/15 bg-white/5 text-white/65 hover:bg-white/10"
@@ -1680,7 +1680,9 @@ export default function LoginPage() {
               {/* ============================== */}
               {activeTab === "Profile" && (
                 <div>
-                  <h2 className="text-3xl font-bold">Your Profile</h2>
+                  <h2 className="text-2xl font-bold sm:text-3xl">
+                    Your Profile
+                  </h2>
                   <p className="mb-8 mt-2 text-white/50">
                     Add details that make your athlete space feel like yours.
                   </p>
@@ -1733,7 +1735,7 @@ export default function LoginPage() {
                   {/* PROFILE WIDGET MENU */}
                   {/* ============================== */}
                   <div className="mt-8 rounded-3xl border border-sky-100/15 bg-white/[0.05] p-5">
-                    <p className="text-xs uppercase tracking-[0.28em] text-sky-100/55">
+                    <p className="text-xs uppercase tracking-[0.18em] text-sky-100/55 sm:tracking-[0.28em]">
                       Add More To Your Profile
                     </p>
 
@@ -1754,7 +1756,7 @@ export default function LoginPage() {
                       {selectedWidget && (
                         <button
                           onClick={addProfileWidget}
-                          className="rounded-full border border-green-300/30 bg-green-300/10 px-6 py-4 text-sm font-bold uppercase tracking-[0.2em] text-green-100 transition hover:bg-green-300 hover:text-black hover:shadow-[0_0_30px_rgba(134,239,172,0.35)]"
+                          className="rounded-full border border-green-300/30 bg-green-300/10 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-green-100 transition hover:bg-green-300 hover:text-black hover:shadow-[0_0_30px_rgba(134,239,172,0.35)] sm:px-6 sm:py-4 sm:tracking-[0.2em]"
                         >
                           Add To Profile
                         </button>
@@ -1789,7 +1791,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={updateProfile}
-                    className="mt-6 rounded-full bg-sky-100 px-8 py-4 font-bold uppercase tracking-[0.25em] text-black transition hover:scale-[1.02]"
+                    className="mt-6 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.16em] text-black transition hover:scale-[1.02] sm:px-8 sm:tracking-[0.25em]"
                   >
                     Save Profile
                   </button>
@@ -1805,7 +1807,9 @@ export default function LoginPage() {
               {/* ============================== */}
               {activeTab === "Application" && (
                 <div>
-                  <h2 className="text-3xl font-bold">Application Snapshot</h2>
+                  <h2 className="text-2xl font-bold sm:text-3xl">
+                    Application Snapshot
+                  </h2>
                   <p className="mb-8 mt-2 text-white/50">
                     These are the details from your original lesson request.
                   </p>
@@ -1817,10 +1821,12 @@ export default function LoginPage() {
                           key={label}
                           className="rounded-3xl border border-sky-100/15 bg-white/[0.06] p-5"
                         >
-                          <p className="text-xs uppercase tracking-[0.25em] text-sky-100/55">
+                          <p className="text-xs uppercase tracking-[0.16em] text-sky-100/55 sm:tracking-[0.25em]">
                             {label}
                           </p>
-                          <p className="mt-2 text-lg text-white/85">{value}</p>
+                          <p className="mt-2 text-base leading-7 text-white/85 sm:text-lg">
+                            {value}
+                          </p>
                         </div>
                       ))
                     ) : (
@@ -1837,10 +1843,10 @@ export default function LoginPage() {
               {/* PROGRESS / VIDEOS / UPDATES TABS */}
               {/* ============================== */}
               {activeTab === "Progress" && (
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                      <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
                         Progress
                       </p>
                       <h2 className="mt-2 text-2xl font-black">
@@ -1879,7 +1885,7 @@ export default function LoginPage() {
 
                     <button
                       onClick={addProgressWidget}
-                      className="rounded-full border border-purple-200/30 bg-purple-300/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.2em] text-purple-100 transition hover:bg-purple-200 hover:text-black"
+                      className="rounded-full border border-purple-200/30 bg-purple-300/10 px-5 py-3 text-sm font-bold uppercase tracking-[0.14em] text-purple-100 transition hover:bg-purple-200 hover:text-black sm:px-6 sm:tracking-[0.2em]"
                     >
                       Add View
                     </button>
@@ -2004,7 +2010,7 @@ export default function LoginPage() {
                           >
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <p className="text-xs uppercase tracking-[0.25em] text-sky-100/45">
+                                <p className="text-xs uppercase tracking-[0.16em] text-sky-100/45 sm:tracking-[0.25em]">
                                   Progress View
                                 </p>
                                 <h3 className="mt-2 text-xl font-bold">
@@ -2016,7 +2022,7 @@ export default function LoginPage() {
 
                               <button
                                 onClick={() => removeProgressWidget(widgetKey)}
-                                className="rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-white/55 transition hover:bg-white hover:text-black"
+                                className="rounded-full border border-white/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white/55 transition hover:bg-white hover:text-black sm:px-4 sm:tracking-[0.16em]"
                               >
                                 Remove
                               </button>
@@ -2166,7 +2172,7 @@ export default function LoginPage() {
                                       <div className="mt-6 rounded-3xl border border-white/10 bg-black/25 p-4">
                                         <svg
                                           viewBox="0 0 100 100"
-                                          className="h-64 w-full overflow-visible"
+                                          className="h-52 w-full overflow-visible sm:h-64"
                                           preserveAspectRatio="none"
                                         >
                                           <defs>
@@ -2266,14 +2272,14 @@ export default function LoginPage() {
                                         "doughnut" ? (
                                       <div className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-black/25 p-5 md:grid-cols-[220px_1fr] md:items-center">
                                         <div
-                                          className="mx-auto flex h-52 w-52 items-center justify-center rounded-full border border-fuchsia-200/20 shadow-[0_0_34px_rgba(168,85,247,0.35)]"
+                                          className="mx-auto flex h-40 w-40 items-center justify-center rounded-full border border-fuchsia-200/20 shadow-[0_0_34px_rgba(168,85,247,0.35)] sm:h-52 sm:w-52"
                                           style={{
                                             background: `conic-gradient(${pieGradient})`,
                                           }}
                                         >
                                           {chartSettings?.chartType ===
                                             "doughnut" && (
-                                            <div className="h-24 w-24 rounded-full border border-white/10 bg-[#020713]" />
+                                            <div className="h-20 w-20 rounded-full border border-white/10 bg-[#020713] sm:h-24 sm:w-24" />
                                           )}
                                         </div>
 
@@ -2355,7 +2361,7 @@ export default function LoginPage() {
                                         })}
                                       </div>
                                     ) : (
-                                      <div className="mt-6 flex h-64 items-end gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-black/25 p-4">
+                                      <div className="mt-6 flex h-56 items-end gap-3 overflow-x-auto rounded-3xl border border-white/10 bg-black/25 p-4 sm:h-64">
                                         {chartMetrics.map((metric, index) => {
                                           const value = Number(
                                             metric.metric_value || 0
@@ -2475,8 +2481,8 @@ export default function LoginPage() {
               )}
 
               {activeTab === "Videos" && (
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
-                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
                     Videos
                   </p>
                   <h2 className="mt-2 text-2xl font-black">Submit A Video</h2>
@@ -2518,7 +2524,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={submitVideo}
-                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
+                    className="mt-4 rounded-full bg-sky-100 px-5 py-4 font-bold uppercase tracking-[0.14em] text-black transition hover:bg-white sm:px-6 sm:tracking-[0.2em]"
                   >
                     Submit Video
                   </button>
@@ -2529,7 +2535,67 @@ export default function LoginPage() {
                     </p>
                   )}
 
-                  <div className="mt-6 overflow-x-auto rounded-3xl border border-white/10">
+                  <div className="mt-6 space-y-4 md:hidden">
+                    {videoSubmissions.length ? (
+                      videoSubmissions.map((video) => (
+                        <section
+                          key={`mobile-video-${video.id}`}
+                          className="rounded-3xl border border-white/10 bg-black/20 p-4"
+                        >
+                          <div className="flex flex-col gap-2">
+                            <p className="font-bold text-sky-100">
+                              {video.title}
+                            </p>
+                            <p className="text-xs uppercase tracking-[0.14em] text-white/45">
+                              {video.created_at
+                                ? new Date(
+                                    video.created_at
+                                  ).toLocaleDateString()
+                                : "Submitted"}{" "}
+                              · {video.status.replace("_", " ")}
+                            </p>
+                          </div>
+
+                          {video.athlete_notes && (
+                            <p className="mt-3 text-sm leading-6 text-white/60">
+                              {video.athlete_notes}
+                            </p>
+                          )}
+
+                          {video.coach_feedback && (
+                            <p className="mt-3 rounded-2xl border border-sky-100/10 bg-sky-100/5 p-3 text-sm leading-6 text-sky-100/80">
+                              {video.coach_feedback}
+                            </p>
+                          )}
+
+                          <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
+                            <a
+                              href={video.video_url}
+                              target="_blank"
+                              className="rounded-full border border-sky-100/25 px-4 py-2 text-sky-100"
+                            >
+                              Original
+                            </a>
+                            {video.reviewed_video_url && (
+                              <a
+                                href={video.reviewed_video_url}
+                                target="_blank"
+                                className="rounded-full border border-purple-100/25 px-4 py-2 text-purple-100"
+                              >
+                                Reviewed
+                              </a>
+                            )}
+                          </div>
+                        </section>
+                      ))
+                    ) : (
+                      <p className="rounded-2xl border border-white/10 bg-black/25 p-4 text-white/55">
+                        No videos submitted yet.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6 hidden overflow-x-auto rounded-3xl border border-white/10 md:block">
                     <table className="w-full min-w-[700px] text-left text-sm">
                       <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                         <tr>
@@ -2601,8 +2667,8 @@ export default function LoginPage() {
               )}
 
               {activeTab === "Updates" && (
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6">
-                  <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.06] p-4 sm:rounded-[2rem] sm:p-6">
+                  <p className="text-xs uppercase tracking-[0.2em] text-sky-100/50 sm:tracking-[0.3em]">
                     Updates
                   </p>
                   <h2 className="mt-2 text-2xl font-black">Ask Coach T</h2>
@@ -2617,7 +2683,7 @@ export default function LoginPage() {
 
                   <button
                     onClick={submitQuestion}
-                    className="mt-4 rounded-full bg-sky-100 px-6 py-4 font-bold uppercase tracking-[0.2em] text-black transition hover:bg-white"
+                    className="mt-4 rounded-full bg-sky-100 px-5 py-4 font-bold uppercase tracking-[0.14em] text-black transition hover:bg-white sm:px-6 sm:tracking-[0.2em]"
                   >
                     Send Question
                   </button>
@@ -2672,7 +2738,7 @@ export default function LoginPage() {
             {/* ============================== */}
             {/* RIGHT SIDE COACH NOTES PANEL */}
             {/* ============================== */}
-            <aside className="rounded-[2rem] border border-sky-100/20 bg-white/[0.06] p-5 shadow-[0_20px_70px_rgba(14,165,233,0.14)] backdrop-blur-xl lg:sticky lg:top-8 lg:self-start">
+            <aside className="rounded-[1.5rem] border border-sky-100/20 bg-white/[0.06] p-4 shadow-[0_20px_70px_rgba(14,165,233,0.14)] backdrop-blur-xl sm:rounded-[2rem] sm:p-5 lg:sticky lg:top-8 lg:self-start">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 overflow-hidden rounded-full border border-sky-100/25 bg-white shadow-[0_0_25px_rgba(186,230,253,0.24)]">
                   <img
@@ -2683,7 +2749,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-sky-100/55">
+                  <p className="text-xs uppercase tracking-[0.18em] text-sky-100/55 sm:tracking-[0.28em]">
                     Coach Notes
                   </p>
                   <h3 className="text-xl font-bold">From Coach T</h3>
@@ -2699,7 +2765,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="mt-4 max-h-[420px] space-y-4 overflow-y-auto pr-1">
+              <div className="mt-4 max-h-none space-y-4 overflow-visible pr-0 lg:max-h-[420px] lg:overflow-y-auto lg:pr-1">
                 {coachNotes.length > 0 ? (
                   coachNotes.map((note) => (
                     <div

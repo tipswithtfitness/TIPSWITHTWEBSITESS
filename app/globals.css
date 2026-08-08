@@ -26,6 +26,7 @@ body {
     rgb(var(--background-start-rgb));
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+  width: 100%;
 }
 
 * {
@@ -100,6 +101,12 @@ footer {
   button,
   a {
     max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 
   .slogan-text {

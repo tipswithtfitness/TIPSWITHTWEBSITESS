@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     description:
       "Sprinting, athletic training, fitness coaching, nutrition guidance, and personalized training plans.",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
