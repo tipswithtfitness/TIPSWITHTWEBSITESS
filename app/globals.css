@@ -24,6 +24,32 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+main,
+section,
+article,
+aside,
+nav,
+footer {
+  min-width: 0;
 }
 @keyframes slamIn {
   0% {
@@ -53,4 +79,33 @@ body {
   text-shadow: 0 0 10px orange, 0 0 20px red, 0 0 40px red;
 
   letter-spacing: 3px;
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2.75rem;
+    line-height: 1.05;
+  }
+
+  h2 {
+    font-size: 2.15rem;
+    line-height: 1.1;
+  }
+
+  p,
+  li {
+    overflow-wrap: anywhere;
+  }
+
+  button,
+  a {
+    max-width: 100%;
+  }
+
+  .slogan-text {
+    padding: 0 1rem;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    letter-spacing: 1.5px;
+  }
 }

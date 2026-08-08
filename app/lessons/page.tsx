@@ -248,7 +248,7 @@ export default function LessonsPage() {
 
   const ServiceHeader = () => (
     <div
-      className={`mb-12 px-8 py-4 rounded-full border text-xl tracking-[0.2em] backdrop-blur-md transition duration-500 ${getServiceHighlightClass()}`}
+      className={`mb-8 rounded-full border px-5 py-3 text-center text-base tracking-[0.14em] backdrop-blur-md transition duration-500 sm:mb-12 sm:px-8 sm:py-4 sm:text-xl sm:tracking-[0.2em] ${getServiceHighlightClass()}`}
       style={{ fontFamily: getServiceFont() }}
     >
       {confirmedService}
@@ -372,17 +372,17 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
   };
 
   return (
-    <main className="bg-black text-white min-h-screen flex flex-col items-center px-6 py-20 relative overflow-hidden">
+    <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-black px-4 py-24 text-white sm:px-6 sm:py-20">
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-10 py-6 backdrop-blur-md bg-black/30 border-b border-white/10">
+      <nav className="fixed left-0 top-0 z-50 flex w-full flex-col items-center justify-between gap-3 border-b border-white/10 bg-black/40 px-4 py-4 text-center backdrop-blur-md sm:px-10 sm:py-6 md:flex-row md:text-left">
         <h1
-          className="text-2xl font-bold tracking-wide cursor-pointer hover:text-gray-300 transition"
+          className="text-xl cursor-pointer font-bold tracking-wide sm:text-2xl hover:text-gray-300 transition"
           onClick={() => handleNavigation("/")}
         >
           TIPS WITH T
         </h1>
 
-        <div className="flex gap-8 text-lg">
+        <div className="flex flex-wrap justify-center gap-3 text-sm sm:gap-6 sm:text-base lg:gap-8 lg:text-lg">
           <button
             onClick={() => handleNavigation("/")}
             className="hover:text-gray-300 transition"
@@ -457,17 +457,17 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           else if (selectedService) setSelectedService("");
           else window.location.href = "/";
         }}
-        className="fixed bottom-8 left-8 text-gray-400 hover:text-white transition text-lg z-50"
+        className="fixed bottom-5 left-4 z-50 text-base text-gray-400 transition hover:text-white sm:bottom-8 sm:left-8 sm:text-lg"
       >
         {"< Back"}
       </button>
 
       {/* MAIN CONTENT */}
-      <div className="w-full flex flex-col items-center mt-24">
+      <div className="flex w-full flex-col items-center pt-24 sm:mt-24 sm:pt-0">
         {/* QUESTION 1: SERVICE */}
         {!confirmedService && (
           <>
-            <h1 className="text-5xl font-bold mb-12 text-center">
+            <h1 className="mb-10 text-center text-3xl font-bold sm:mb-12 sm:text-5xl">
               What are you looking for?
             </h1>
 
@@ -476,7 +476,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 <button
                   key={service.name}
                   onClick={() => setSelectedService(service.name)}
-                  className={`py-4 rounded-xl text-xl transition duration-300 border ${
+                  className={`rounded-xl py-4 text-lg sm:text-xl transition duration-300 border ${
                     selectedService === service.name
                       ? service.className
                       : service.hoverClassName
@@ -501,7 +501,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {selectedService && (
               <button
                 onClick={() => setConfirmedService(selectedService)}
-                className="mt-12 px-10 py-4 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-12 rounded-full px-6 py-3 sm:px-10 sm:py-4 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 CONTINUE →
               </button>
@@ -514,11 +514,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-xl flex flex-col items-center animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-4xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-4xl">
               What should I call you?
             </h2>
 
-            <p className="text-gray-400 text-center mb-10 text-lg">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg">
               First name, last initial, and email.
             </p>
 
@@ -527,7 +527,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="First name"
-                className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-white"
+                className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-white"
               />
               {/* =============================
                   BOT PROTECTION FIELD
@@ -547,7 +547,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   setLastInitial(e.target.value.slice(0, 1).toUpperCase())
                 }
                 placeholder="Last initial"
-                className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-white"
+                className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-white"
               />
 
               <input
@@ -555,14 +555,14 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 onChange={(e) => setClientEmail(e.target.value)}
                 placeholder="Email"
                 type="email"
-                className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-white"
+                className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-white"
               />
             </div>
 
             {firstName && lastInitial && clientEmail && (
               <button
                 onClick={() => setConfirmedName(true)}
-                className="mt-12 px-10 py-4 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-12 rounded-full px-6 py-3 sm:px-10 sm:py-4 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 CONTINUE →
               </button>
@@ -575,7 +575,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-2xl animate-fadeIn flex flex-col items-center">
             <ServiceHeader />
 
-            <h2 className="text-4xl font-bold text-center mb-10">
+            <h2 className="text-3xl font-bold text-center mb-8 sm:mb-10 sm:text-4xl">
               Where are you in your journey?
             </h2>
 
@@ -630,7 +630,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {selectedJourney && (
               <button
                 onClick={() => setConfirmedJourney(selectedJourney)}
-                className="mt-14 px-10 py-4 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-14 rounded-full px-6 py-3 sm:px-10 sm:py-4 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 CONTINUE →
               </button>
@@ -643,11 +643,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
               Tell me about yourself.
             </h2>
 
-            <p className="text-gray-400 text-center mb-8 text-lg max-w-xl">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:text-lg max-w-xl">
               What are your goals, motivations, or challenges?
             </p>
 
@@ -656,7 +656,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
               onChange={(e) => setAboutText(e.target.value)}
               maxLength={150}
               placeholder="Share your story..."
-              className="w-full h-64 bg-white/5 border border-white/20 rounded-3xl p-8 text-xl outline-none focus:border-white focus:shadow-[0_0_35px_rgba(255,255,255,0.25)] transition duration-300 resize-none backdrop-blur-md"
+              className="w-full min-h-48 sm:h-64 bg-white/5 border border-white/20 rounded-3xl p-5 text-base sm:p-8 sm:text-xl outline-none focus:border-white focus:shadow-[0_0_35px_rgba(255,255,255,0.25)] transition duration-300 resize-none backdrop-blur-md"
             />
 
             <div className="text-right text-gray-500 mt-4 w-full">
@@ -666,7 +666,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {aboutText.length > 0 && (
               <button
                 onClick={() => setFinishedAbout(true)}
-                className="mt-10 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-10 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 NEXT SECTION →
               </button>
@@ -679,14 +679,14 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-8">
+            <h2 className="text-3xl font-bold text-center mb-8 sm:text-5xl">
               Any special events you want to prepare for?
             </h2>
 
-            <div className="flex justify-center gap-6">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <button
                 onClick={() => setPreparingEvent("Yes")}
-                className={`px-10 py-4 rounded-2xl border text-xl transition duration-300 ${
+                className={`rounded-2xl border px-7 py-3 text-lg sm:px-10 sm:py-4 sm:text-xl transition duration-300 ${
                   preparingEvent === "Yes"
                     ? "bg-green-500/20 border-green-400 text-green-200 shadow-[0_0_30px_rgba(34,197,94,0.8)]"
                     : "border-white/20 hover:bg-green-500/10 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]"
@@ -700,7 +700,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   setPreparingEvent("No");
                   setEventDetails("");
                 }}
-                className={`px-10 py-4 rounded-2xl border text-xl transition duration-300 ${
+                className={`rounded-2xl border px-7 py-3 text-lg sm:px-10 sm:py-4 sm:text-xl transition duration-300 ${
                   preparingEvent === "No"
                     ? "bg-white/20 border-white text-white shadow-[0_0_30px_rgba(255,255,255,0.5)]"
                     : "border-white/20 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
@@ -716,7 +716,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   value={eventDetails}
                   onChange={(e) => setEventDetails(e.target.value)}
                   placeholder="Tell me more..."
-                  className="w-full h-40 bg-white/5 border border-white/20 rounded-3xl p-8 text-lg outline-none focus:border-green-400 focus:shadow-[0_0_35px_rgba(34,197,94,0.25)] transition duration-300 resize-none backdrop-blur-md"
+                  className="w-full min-h-36 sm:h-40 bg-white/5 border border-white/20 rounded-3xl p-5 text-base sm:p-8 sm:text-lg outline-none focus:border-green-400 focus:shadow-[0_0_35px_rgba(34,197,94,0.25)] transition duration-300 resize-none backdrop-blur-md"
                 />
               </div>
             )}
@@ -724,7 +724,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {preparingEvent && (
               <button
                 onClick={() => setFinishedEvents(true)}
-                className="mt-14 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-14 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 NEXT SECTION →
               </button>
@@ -737,11 +737,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
               What is your weight?
             </h2>
 
-            <p className="text-gray-400 text-center mb-10 text-lg max-w-xl">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-xl">
               Please include whether it is pounds or kilos.
             </p>
 
@@ -749,7 +749,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
               value={bodyWeight}
               onChange={(e) => setBodyWeight(e.target.value)}
               placeholder="Example: 145 lbs or 66 kg"
-              className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-white focus:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition duration-300"
+              className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-white focus:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition duration-300"
             />
 
             {bodyWeight && (
@@ -769,14 +769,14 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-8">
+            <h2 className="text-3xl font-bold text-center mb-8 sm:text-5xl">
               Are you a sprinter?
             </h2>
 
-            <div className="flex justify-center gap-6">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <button
                 onClick={() => setIsSprinter("Yes")}
-                className={`px-10 py-4 rounded-2xl border text-xl transition duration-300 ${
+                className={`rounded-2xl border px-7 py-3 text-lg sm:px-10 sm:py-4 sm:text-xl transition duration-300 ${
                   isSprinter === "Yes"
                     ? "bg-yellow-400/20 border-yellow-300 text-yellow-200 shadow-[0_0_35px_rgba(250,204,21,0.9)]"
                     : "border-yellow-300/60 hover:bg-yellow-400/10 hover:shadow-[0_0_25px_rgba(250,204,21,0.55)]"
@@ -794,7 +794,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   setPersonalRecords("");
                   setFinishedSprintDetails(false);
                 }}
-                className={`px-10 py-4 rounded-2xl border text-xl transition duration-300 ${
+                className={`rounded-2xl border px-7 py-3 text-lg sm:px-10 sm:py-4 sm:text-xl transition duration-300 ${
                   isSprinter === "No"
                     ? "bg-white/20 border-white text-white shadow-[0_0_30px_rgba(255,255,255,0.5)]"
                     : "border-white/20 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
@@ -807,7 +807,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {isSprinter && (
               <button
                 onClick={() => setConfirmedSprinter(true)}
-                className="mt-14 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-14 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 CONTINUE →
               </button>
@@ -822,11 +822,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
               <ServiceHeader />
 
-              <h2 className="text-5xl font-bold text-center mb-6">
+              <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
                 Sprint details
               </h2>
 
-              <p className="text-gray-400 text-center mb-10 text-lg max-w-2xl">
+              <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-2xl">
                 Please include pounds or kilos for your lifts, and include the
                 event name for your PRs.
               </p>
@@ -836,25 +836,25 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   value={maxSquat}
                   onChange={(e) => setMaxSquat(e.target.value)}
                   placeholder="Max squat, example: 225 lbs or 102 kg"
-                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-yellow-300 transition duration-300"
+                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-yellow-300 transition duration-300"
                 />
                 <input
                   value={maxRdl}
                   onChange={(e) => setMaxRdl(e.target.value)}
                   placeholder="Max RDL, example: 185 lbs or 84 kg"
-                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-yellow-300 transition duration-300"
+                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-yellow-300 transition duration-300"
                 />
                 <input
                   value={maxDumbbellPushPress}
                   onChange={(e) => setMaxDumbbellPushPress(e.target.value)}
                   placeholder="Max dumbbell push press, example: 45 lb DBs or 20 kg DBs"
-                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-6 py-4 text-xl outline-none focus:border-yellow-300 transition duration-300"
+                  className="w-full bg-white/5 border border-white/20 rounded-2xl px-5 py-4 text-base sm:px-6 sm:text-xl outline-none focus:border-yellow-300 transition duration-300"
                 />
                 <textarea
                   value={personalRecords}
                   onChange={(e) => setPersonalRecords(e.target.value)}
                   placeholder="Personal records, example: 100m - 12.4, 200m - 25.8"
-                  className="w-full h-40 bg-white/5 border border-white/20 rounded-3xl p-8 text-lg outline-none focus:border-yellow-300 transition duration-300 resize-none backdrop-blur-md"
+                  className="w-full min-h-36 sm:h-40 bg-white/5 border border-white/20 rounded-3xl p-5 text-base sm:p-8 sm:text-lg outline-none focus:border-yellow-300 transition duration-300 resize-none backdrop-blur-md"
                 />
               </div>
 
@@ -864,7 +864,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 personalRecords && (
                   <button
                     onClick={() => setFinishedSprintDetails(true)}
-                    className="mt-12 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                    className="mt-12 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
                   >
                     CONTINUE →
                   </button>
@@ -879,11 +879,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
               <ServiceHeader />
 
-              <h2 className="text-5xl font-bold text-center mb-6">
+              <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
                 What is your training period?
               </h2>
 
-              <p className="text-gray-400 text-center mb-10 text-lg max-w-2xl">
+              <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-2xl">
                 Choose the timeline that best matches what you are preparing
                 for.
               </p>
@@ -921,7 +921,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                   customTrainingPeriod) && (
                   <button
                     onClick={() => setFinishedTrainingPeriod(true)}
-                    className="mt-12 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                    className="mt-12 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
                   >
                     REVIEW →
                   </button>
@@ -934,16 +934,16 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
               Does everything look right?
             </h2>
 
-            <p className="text-gray-400 text-center mb-10 text-lg max-w-xl">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-xl">
               This helps me prepare for our first Zoom meeting where we’ll go
               over logistics, scheduling, and get to know you more.
             </p>
 
-            <div className="w-full bg-white/5 border border-white/20 rounded-3xl p-8 text-lg space-y-5">
+            <div className="w-full bg-white/5 border border-white/20 rounded-3xl p-5 text-base sm:p-8 sm:text-lg space-y-5">
               <p>
                 <strong>Name:</strong> {firstName} {lastInitial}.
               </p>
@@ -1000,7 +1000,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
 
             <button
               onClick={() => setReviewConfirmed(true)}
-              className="mt-14 px-12 py-5 rounded-full border border-green-400 bg-green-500/20 text-green-100 text-xl tracking-[0.2em] hover:scale-105 hover:bg-green-400 hover:text-black transition duration-500 shadow-[0_0_30px_rgba(34,197,94,0.45)]"
+              className="mt-12 rounded-full border border-green-400 bg-green-500/20 px-6 py-3 text-base tracking-[0.14em] text-green-100 shadow-[0_0_30px_rgba(34,197,94,0.45)] transition duration-500 hover:scale-105 hover:bg-green-400 hover:text-black sm:mt-14 sm:px-12 sm:py-5 sm:text-xl sm:tracking-[0.2em]"
             >
               EVERYTHING LOOKS GOOD!
             </button>
@@ -1012,11 +1012,11 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-6xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
               Choose your training option
             </h2>
 
-            <p className="text-gray-400 text-center mb-10 text-lg max-w-3xl">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-3xl">
               Pricing for special events and hourly lessons can be discussed
               over Zoom. Your full training plan and service begin once payment
               is received.
@@ -1033,7 +1033,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                       : "border-white/20 bg-white/5 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(255,255,255,0.18)]"
                   }`}
                 >
-                  <div className="mx-auto mb-6 h-44 w-44 overflow-hidden rounded-full border border-white/20 bg-white/10 shadow-[0_0_25px_rgba(255,255,255,0.12)]">
+                  <div className="mx-auto mb-6 h-32 w-32 sm:h-44 sm:w-44 overflow-hidden rounded-full border border-white/20 bg-white/10 shadow-[0_0_25px_rgba(255,255,255,0.12)]">
                     <img
                       src={plan.image}
                       alt={plan.name}
@@ -1058,7 +1058,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
 
             <button
               onClick={() => setSelectedPricingOption("Discuss over Zoom")}
-              className={`mt-8 px-10 py-4 rounded-full border text-lg tracking-[0.2em] transition duration-300 ${
+              className={`mt-8 rounded-full px-6 py-3 sm:px-10 sm:py-4 border text-lg tracking-[0.2em] transition duration-300 ${
                 selectedPricingOption === "Discuss over Zoom"
                   ? "border-white bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.5)]"
                   : "border-white/20 bg-white/10 hover:bg-white hover:text-black"
@@ -1087,7 +1087,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
             {selectedPricingOption && (
               <button
                 onClick={() => setConfirmedPricing(true)}
-                className="mt-12 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
+                className="mt-12 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)]"
               >
                 CONTINUE TO ZOOM →
               </button>
@@ -1100,17 +1100,17 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
           <div className="w-full max-w-3xl flex flex-col items-center justify-center min-h-[70vh] animate-fadeIn">
             <ServiceHeader />
 
-            <h2 className="text-5xl font-bold text-center mb-6">
+            <h2 className="text-3xl font-bold text-center mb-6 sm:text-5xl">
               Choose a Zoom meeting time
             </h2>
 
-            <p className="text-gray-400 text-center mb-10 text-lg max-w-2xl">
+            <p className="text-center text-base leading-7 text-gray-400 mb-8 sm:mb-10 sm:text-lg max-w-2xl">
               The first meeting usually takes 15–45 minutes depending on how
               much you want to share and how much time we need to find the right
               options for you.
             </p>
 
-            <div className="w-full bg-white/5 border border-white/20 rounded-3xl p-8 flex flex-col gap-6">
+            <div className="flex w-full flex-col gap-6 rounded-3xl border border-white/20 bg-white/5 p-5 sm:p-8">
               <label className="flex flex-col gap-3 text-lg">
                 Preferred date
                 <input
@@ -1136,7 +1136,7 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
               <button
                 onClick={handleSubmitRequest}
                 disabled={isSubmitting}
-                className="mt-14 px-12 py-5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-xl tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50"
+                className="mt-14 rounded-full px-6 py-3 sm:px-12 sm:py-5 border border-white/20 bg-white/10 backdrop-blur-md text-base tracking-[0.18em] sm:text-xl sm:tracking-[0.3em] hover:scale-105 hover:bg-white hover:text-black transition duration-500 shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50"
               >
                 {isSubmitting ? "SENDING..." : "SEND REQUEST →"}
               </button>
@@ -1149,12 +1149,12 @@ Initial Zoom meetings are expected to take 15-45 minutes depending on how much t
                 </p>
 
                 {athleteCode && (
-                  <div className="mt-8 rounded-3xl border border-yellow-300/40 bg-yellow-400/10 px-8 py-6 text-center shadow-[0_0_30px_rgba(250,204,21,0.25)]">
-                    <p className="text-sm uppercase tracking-[0.25em] text-yellow-200 mb-3">
+                  <div className="mt-8 rounded-3xl border border-yellow-300/40 bg-yellow-400/10 px-5 py-6 text-center shadow-[0_0_30px_rgba(250,204,21,0.25)] sm:px-8">
+                    <p className="mb-3 text-xs uppercase tracking-[0.18em] text-yellow-200 sm:text-sm sm:tracking-[0.25em]">
                       Your Athlete Code
                     </p>
 
-                    <p className="text-4xl font-black tracking-[0.18em] text-yellow-100 break-words">
+                    <p className="break-words text-3xl font-black tracking-[0.12em] text-yellow-100 sm:text-4xl sm:tracking-[0.18em]">
                       {athleteCode}
                     </p>
 
