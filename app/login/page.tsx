@@ -260,6 +260,101 @@ type TrainingDay = {
   sort_order?: number;
 };
 
+type WorkoutCategory = "all" | "warmups" | "plyos" | "lift";
+
+const workoutCategoryOptions: { key: WorkoutCategory; label: string }[] = [
+  { key: "all", label: "All Sections" },
+  { key: "warmups", label: "Warmups" },
+  { key: "plyos", label: "Plyos" },
+  { key: "lift", label: "Lift" },
+];
+
+const workoutCategoryAliases: Record<Exclude<WorkoutCategory, "all">, string[]> =
+  {
+    warmups: ["warmup", "warmups", "warm up", "warm ups", "warm-up", "warm-ups"],
+    plyos: ["plyo", "plyos", "plyometric", "plyometrics"],
+    lift: ["lift", "lifts", "lifting", "strength", "weight room", "weights"],
+  };
+
+function getWorkoutCategoryLabel(category: WorkoutCategory) {
+  return (
+    workoutCategoryOptions.find((option) => option.key === category)?.label ||
+    "Workout"
+  );
+}
+
+function getWorkoutCategoryFromHeading(line: string) {
+  const normalizedLine = line
+    .trim()
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, "")
+    .replace(/\s+/g, " ");
+
+  for (const [category, aliases] of Object.entries(workoutCategoryAliases)) {
+    for (const alias of aliases) {
+      if (
+        normalizedLine === alias ||
+        normalizedLine.startsWith(`${alias}:`) ||
+        normalizedLine.startsWith(`${alias} -`) ||
+        normalizedLine.startsWith(`${alias}--`)
+      ) {
+        return {
+          category: category as Exclude<WorkoutCategory, "all">,
+          remainder: line.slice(alias.length).replace(/^[:\-\s]+/, "").trim(),
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function getWorkoutSections(workout?: string) {
+  const sections: Record<Exclude<WorkoutCategory, "all">, string[]> = {
+    warmups: [],
+    plyos: [],
+    lift: [],
+  };
+  let activeCategory: Exclude<WorkoutCategory, "all"> | null = null;
+
+  String(workout || "")
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const heading = getWorkoutCategoryFromHeading(line);
+
+      if (heading) {
+        activeCategory = heading.category;
+
+        if (heading.remainder) {
+          sections[activeCategory].push(heading.remainder);
+        }
+
+        return;
+      }
+
+      if (activeCategory) {
+        sections[activeCategory].push(line);
+      }
+    });
+
+  return {
+    warmups: sections.warmups.join("\n").trim(),
+    plyos: sections.plyos.join("\n").trim(),
+    lift: sections.lift.join("\n").trim(),
+  };
+}
+
+function getWorkoutTextForCategory(
+  day: TrainingDay,
+  selectedCategory: WorkoutCategory
+) {
+  if (selectedCategory === "all") {
+    return day.workout || "-";
+  }
+
+  return getWorkoutSections(day.workout)[selectedCategory];
+}
+
 type AthleteMetric = {
   id: string;
   entry_date: string;
@@ -319,6 +414,8 @@ export default function LoginPage() {
   );
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedTrainingDay, setSelectedTrainingDay] = useState("all");
+  const [selectedWorkoutCategory, setSelectedWorkoutCategory] =
+    useState<WorkoutCategory>("all");
   const [selectedMetricType, setSelectedMetricType] =
     useState("calories_burned");
   const [selectedProgressWidget, setSelectedProgressWidget] = useState("");
@@ -986,6 +1083,9 @@ export default function LoginPage() {
     const selectedTrainingDayDetails = visibleTrainingDays.find(
       (day) => day.day_name === selectedTrainingDay
     );
+    const selectedWorkoutCategoryLabel = getWorkoutCategoryLabel(
+      selectedWorkoutCategory
+    );
 
     const videoUpdateCount = videoSubmissions.filter(
       (video) =>
@@ -1028,16 +1128,21 @@ export default function LoginPage() {
 
       const dayRows = printDays.length
         ? printDays
-            .map(
-              (day) => `
+            .map((day) => {
+              const workoutText = getWorkoutTextForCategory(
+                day,
+                selectedWorkoutCategory
+              );
+
+              return `
                 <tr>
                   <td>${escapePrintHtml(day.day_name)}</td>
                   <td>${escapePrintHtml(day.focus || "-")}</td>
-                  <td>${escapePrintHtml(day.workout || "-")}</td>
+                  <td>${escapePrintHtml(workoutText || `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed.`)}</td>
                   <td>${escapePrintHtml(day.coach_notes || "-")}</td>
                 </tr>
-              `
-            )
+              `;
+            })
             .join("")
         : `
             <tr>
@@ -1053,8 +1158,11 @@ export default function LoginPage() {
                 <h2>${escapePrintHtml(printDays[0].focus || "Workout Day")}</h2>
 
                 <div class="detail-block">
-                  <h3>Workout</h3>
-                  <p>${escapePrintHtml(printDays[0].workout || "-")}</p>
+                  <h3>${escapePrintHtml(selectedWorkoutCategoryLabel)}</h3>
+                  <p>${escapePrintHtml(
+                    getWorkoutTextForCategory(printDays[0], selectedWorkoutCategory) ||
+                      `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed for this day.`
+                  )}</p>
                 </div>
 
                 <div class="detail-block">
@@ -1204,13 +1312,17 @@ export default function LoginPage() {
                 isSingleDayPrint
                   ? singleDayDetails
                   : `
-                    <h2>Monday-Friday Plan</h2>
+                    <h2>Monday-Friday Plan${
+                      selectedWorkoutCategory === "all"
+                        ? ""
+                        : ` - ${escapePrintHtml(selectedWorkoutCategoryLabel)}`
+                    }</h2>
                     <table>
                       <thead>
                         <tr>
                           <th>Day</th>
                           <th>Focus</th>
-                          <th>Workout</th>
+                          <th>${escapePrintHtml(selectedWorkoutCategoryLabel)}</th>
                           <th>Coach Notes</th>
                         </tr>
                       </thead>
@@ -1496,7 +1608,8 @@ export default function LoginPage() {
                                 Workout Sections
                               </p>
                               <p className="mt-1 text-sm text-white/55">
-                                Choose the day you want to review or print.
+                                Choose the day and section you want to review or
+                                print.
                               </p>
                             </div>
 
@@ -1540,62 +1653,162 @@ export default function LoginPage() {
                               </button>
                             ))}
                           </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                            {workoutCategoryOptions.map((option) => (
+                              <button
+                                key={option.key}
+                                onClick={() =>
+                                  setSelectedWorkoutCategory(option.key)
+                                }
+                                className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${
+                                  selectedWorkoutCategory === option.key
+                                    ? "bg-white text-black"
+                                    : "border border-white/15 bg-white/5 text-white/65 hover:bg-white/10"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        <div className="mt-5 overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.05]">
+                        <div className="mt-5 grid gap-3 md:hidden">
+                          {filteredTrainingDays.map((day) => {
+                            const workoutText = getWorkoutTextForCategory(
+                              day,
+                              selectedWorkoutCategory
+                            );
+
+                            return (
+                              <article
+                                key={`mobile-${day.id || day.day_name}`}
+                                className="rounded-3xl border border-white/10 bg-white/[0.05] p-4"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="text-xs uppercase tracking-[0.2em] text-sky-100/55">
+                                      {day.day_name}
+                                    </p>
+                                    <h3 className="mt-1 text-lg font-bold text-white">
+                                      {day.focus || "Workout Day"}
+                                    </h3>
+                                  </div>
+
+                                  <button
+                                    onClick={() => printWorkoutSheet(day)}
+                                    title={`Print ${day.day_name}`}
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
+                                  >
+                                    <svg
+                                      aria-hidden="true"
+                                      viewBox="0 0 24 24"
+                                      className="h-4 w-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M6 9V2h12v7" />
+                                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                      <path d="M6 14h12v8H6z" />
+                                    </svg>
+                                    <span className="sr-only">
+                                      Print {day.day_name}
+                                    </span>
+                                  </button>
+                                </div>
+
+                                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-100/55">
+                                    {selectedWorkoutCategoryLabel}
+                                  </p>
+                                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/75">
+                                    {workoutText ||
+                                      `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed for this day.`}
+                                  </p>
+                                </div>
+
+                                {day.coach_notes && (
+                                  <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/40">
+                                      Coach Notes
+                                    </p>
+                                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/65">
+                                      {day.coach_notes}
+                                    </p>
+                                  </div>
+                                )}
+                              </article>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-5 hidden overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.05] md:block">
                           <table className="w-full min-w-[780px] text-left text-sm">
                             <thead className="bg-white/[0.06] text-xs uppercase tracking-[0.18em] text-white/45">
                               <tr>
                                 <th className="px-4 py-4">Day</th>
                                 <th className="px-4 py-4">Focus</th>
-                                <th className="px-4 py-4">Workout</th>
+                                <th className="px-4 py-4">
+                                  {selectedWorkoutCategoryLabel}
+                                </th>
                                 <th className="px-4 py-4">Coach Notes</th>
                                 <th className="px-4 py-4">Print</th>
                               </tr>
                             </thead>
 
                             <tbody className="divide-y divide-white/10">
-                              {filteredTrainingDays.map((day) => (
-                                <tr key={day.id || day.day_name}>
-                                  <td className="px-4 py-4 font-bold text-sky-100">
-                                    {day.day_name}
-                                  </td>
-                                  <td className="px-4 py-4 text-white/70">
-                                    {day.focus || "-"}
-                                  </td>
-                                  <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
-                                    {day.workout || "-"}
-                                  </td>
-                                  <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
-                                    {day.coach_notes || "-"}
-                                  </td>
-                                  <td className="px-4 py-4">
-                                    <button
-                                      onClick={() => printWorkoutSheet(day)}
-                                      title={`Print ${day.day_name}`}
-                                      className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
-                                    >
-                                      <svg
-                                        aria-hidden="true"
-                                        viewBox="0 0 24 24"
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
+                              {filteredTrainingDays.map((day) => {
+                                const workoutText = getWorkoutTextForCategory(
+                                  day,
+                                  selectedWorkoutCategory
+                                );
+
+                                return (
+                                  <tr key={day.id || day.day_name}>
+                                    <td className="px-4 py-4 font-bold text-sky-100">
+                                      {day.day_name}
+                                    </td>
+                                    <td className="px-4 py-4 text-white/70">
+                                      {day.focus || "-"}
+                                    </td>
+                                    <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                      {workoutText ||
+                                        `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed for this day.`}
+                                    </td>
+                                    <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                      {day.coach_notes || "-"}
+                                    </td>
+                                    <td className="px-4 py-4">
+                                      <button
+                                        onClick={() => printWorkoutSheet(day)}
+                                        title={`Print ${day.day_name}`}
+                                        className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-100/25 bg-white/10 text-sky-100 transition hover:bg-sky-100 hover:text-black"
                                       >
-                                        <path d="M6 9V2h12v7" />
-                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                                        <path d="M6 14h12v8H6z" />
-                                      </svg>
-                                      <span className="sr-only">
-                                        Print {day.day_name}
-                                      </span>
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
+                                        <svg
+                                          aria-hidden="true"
+                                          viewBox="0 0 24 24"
+                                          className="h-4 w-4"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M6 9V2h12v7" />
+                                          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                          <path d="M6 14h12v8H6z" />
+                                        </svg>
+                                        <span className="sr-only">
+                                          Print {day.day_name}
+                                        </span>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
