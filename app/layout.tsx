@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -12,6 +12,16 @@ export const metadata: Metadata = {
   description:
     "Tips With T offers sprinting, athletic training, fitness coaching, nutrition guidance, and personalized training plans.",
   applicationName: "Tips With T",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Tips With T",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Tips With T",
     description:
@@ -25,6 +35,14 @@ export const metadata: Metadata = {
     description:
       "Sprinting, athletic training, fitness coaching, nutrition guidance, and personalized training plans.",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#020713",
 };
 
 export default function RootLayout({
