@@ -3,7 +3,7 @@
 // ==============================
 // IMPORTS AND SUPABASE CONNECTION
 // ==============================
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -512,6 +512,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const loginVideoRef = useRef<HTMLVideoElement>(null);
+  const [isEntryReady, setIsEntryReady] = useState(false);
 
   // ==============================
   // LOAD DAILY GENERATED ATHLETE FACT
@@ -544,6 +546,30 @@ export default function LoginPage() {
 
     return () => window.clearTimeout(finishTimer);
   }, [isWelcomeLoading, pendingAthlete]);
+
+  useEffect(() => {
+    if (athlete || pendingAthlete) return;
+
+    const video = loginVideoRef.current;
+    const fallbackTimer = window.setTimeout(() => {
+      setIsEntryReady(true);
+    }, 2600);
+
+    if (!video) {
+      return () => window.clearTimeout(fallbackTimer);
+    }
+
+    video
+      .play()
+      .then(() => {
+        setIsEntryReady(true);
+      })
+      .catch(() => {
+        return;
+      });
+
+    return () => window.clearTimeout(fallbackTimer);
+  }, [athlete, pendingAthlete]);
 
   // ==============================
   // LOAD ATHLETE DASHBOARD DATA
@@ -2975,12 +3001,45 @@ export default function LoginPage() {
   // ==============================
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#082f49] px-6 text-white">
+      <div
+        className={`pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#020713] px-6 text-center transition-opacity duration-1000 ${
+          isEntryReady ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px), radial-gradient(circle, rgba(147,197,253,0.7) 1px, transparent 1px)",
+            backgroundSize: "84px 84px, 136px 136px",
+            backgroundPosition: "0 0, 42px 58px",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.22),transparent_48%)]" />
+
+        <div className="relative">
+          <p className="text-xs uppercase tracking-[0.55em] text-sky-100/65">
+            Loading
+          </p>
+          <h1 className="mt-5 text-5xl font-black tracking-[0.16em] text-white sm:text-7xl">
+            TIPS WITH T
+          </h1>
+          <div className="mx-auto mt-8 h-1 w-56 overflow-hidden rounded-full bg-white/15">
+            <div className="h-full w-full origin-left animate-[entryLoad_2.1s_ease-in-out_infinite] rounded-full bg-sky-100" />
+          </div>
+        </div>
+      </div>
+
       <video
+        ref={loginVideoRef}
         autoPlay
         muted
         loop
         playsInline
         preload="auto"
+        onPlaying={() => setIsEntryReady(true)}
+        onCanPlay={() => setIsEntryReady(true)}
         className="absolute inset-0 h-full w-full object-cover opacity-80"
       >
         <source src="/background.mp4" type="video/mp4" />
@@ -2988,7 +3047,11 @@ export default function LoginPage() {
 
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-sky-950/25 to-black/45" />
 
-      <div className="relative w-full max-w-md rounded-[2rem] border border-sky-100/20 bg-white/5 p-8 shadow-[0_25px_90px_rgba(14,165,233,0.18)] backdrop-blur-xl">
+      <div
+        className={`relative w-full max-w-md rounded-[2rem] border border-sky-100/20 bg-white/5 p-8 shadow-[0_25px_90px_rgba(14,165,233,0.18)] backdrop-blur-xl transition-opacity duration-1000 ${
+          isEntryReady ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <p className="text-center text-xs uppercase tracking-[0.35em] text-sky-100/55">
           Tips With T
         </p>
@@ -3052,6 +3115,20 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
+
+      <style jsx>{`
+        @keyframes entryLoad {
+          0% {
+            transform: scaleX(0);
+          }
+          45% {
+            transform: scaleX(0.72);
+          }
+          100% {
+            transform: scaleX(1);
+          }
+        }
+      `}</style>
     </main>
   );
 }

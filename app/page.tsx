@@ -1,24 +1,67 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isEntryReady, setIsEntryReady] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
+    const fallbackTimer = window.setTimeout(() => {
+      setIsEntryReady(true);
+    }, 2600);
 
-    if (!video) return;
+    if (!video) {
+      return () => window.clearTimeout(fallbackTimer);
+    }
 
     video.playbackRate = 1;
-    video.play().catch(() => {
-      return;
-    });
+    video
+      .play()
+      .then(() => {
+        setIsEntryReady(true);
+      })
+      .catch(() => {
+        return;
+      });
+
+    return () => window.clearTimeout(fallbackTimer);
   }, []);
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
+      <div
+        className={`pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#020713] px-6 text-center transition-opacity duration-1000 ${
+          isEntryReady ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px), radial-gradient(circle, rgba(147,197,253,0.7) 1px, transparent 1px)",
+            backgroundSize: "84px 84px, 136px 136px",
+            backgroundPosition: "0 0, 42px 58px",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.22),transparent_48%)]" />
+
+        <div className="relative">
+          <p className="text-xs uppercase tracking-[0.55em] text-sky-100/65">
+            Loading
+          </p>
+          <h1 className="mt-5 text-5xl font-black tracking-[0.16em] text-white sm:text-7xl">
+            TIPS WITH T
+          </h1>
+          <div className="mx-auto mt-8 h-1 w-56 overflow-hidden rounded-full bg-white/15">
+            <div className="h-full w-full origin-left animate-[entryLoad_2.1s_ease-in-out_infinite] rounded-full bg-sky-100" />
+          </div>
+        </div>
+      </div>
+
       {/* VIDEO BACKGROUND */}
       <video
         ref={videoRef}
@@ -27,6 +70,8 @@ export default function Home() {
         loop
         playsInline
         preload="auto"
+        onPlaying={() => setIsEntryReady(true)}
+        onCanPlay={() => setIsEntryReady(true)}
         className="absolute top-0 left-0 w-full h-full object-cover"
       >
         <source src="/background.mp4" type="video/mp4" />
@@ -36,7 +81,11 @@ export default function Home() {
       <div className="absolute inset-0 bg-black/5"></div>
 
       {/* WEBSITE CONTENT */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div
+        className={`relative z-10 min-h-screen flex flex-col transition-opacity duration-1000 ${
+          isEntryReady ? "opacity-100" : "opacity-0"
+        }`}
+      >
         {/* NAVBAR */}
         <nav className="flex justify-between items-center px-8 py-6 border-b border-white/10 backdrop-blur-sm">
           <h1 className="text-2xl font-bold">TIPS WITH T</h1>
@@ -132,6 +181,20 @@ export default function Home() {
       >
         ⚡
       </button>
+
+      <style jsx>{`
+        @keyframes entryLoad {
+          0% {
+            transform: scaleX(0);
+          }
+          45% {
+            transform: scaleX(0.72);
+          }
+          100% {
+            transform: scaleX(1);
+          }
+        }
+      `}</style>
     </main>
   );
 }
