@@ -328,6 +328,7 @@ function getWorkoutSections(workout?: string) {
     workout: [],
   };
   let activeCategory: Exclude<WorkoutCategory, "all"> | null = null;
+  const unsectionedLines: string[] = [];
 
   String(workout || "")
     .split(/\r?\n/)
@@ -346,8 +347,17 @@ function getWorkoutSections(workout?: string) {
 
       if (activeCategory) {
         sections[activeCategory].push(line);
+        return;
       }
+
+      unsectionedLines.push(line);
     });
+
+  const unsectionedWorkout = unsectionedLines.join("\n").trim();
+
+  if (unsectionedWorkout) {
+    sections.workout.unshift(unsectionedWorkout);
+  }
 
   return {
     warmups: sections.warmups.join("\n").trim(),

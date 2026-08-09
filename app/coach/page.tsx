@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 type Athlete = {
   id: string;
@@ -128,6 +128,7 @@ function getWorkoutSections(workout?: string) {
     workout: [],
   };
   let activeSection: WorkoutSection | null = null;
+  const unsectionedLines: string[] = [];
 
   String(workout || "")
     .split(/\r?\n/)
@@ -146,8 +147,17 @@ function getWorkoutSections(workout?: string) {
 
       if (activeSection) {
         sections[activeSection].push(line);
+        return;
       }
+
+      unsectionedLines.push(line);
     });
+
+  const unsectionedWorkout = unsectionedLines.join("\n").trim();
+
+  if (unsectionedWorkout) {
+    sections.workout.unshift(unsectionedWorkout);
+  }
 
   return {
     warmups: sections.warmups.join("\n").trim(),
@@ -232,20 +242,26 @@ type NotificationCounts = {
   newQuestions: number;
 };
 
-const weekdayDrafts = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-].map((dayName, index) => ({
-  week_number: 1,
-  day_name: dayName,
-  focus: "",
-  workout: "",
-  coach_notes: "",
-  sort_order: index + 1,
-}));
+const weekdayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+function getWeekdayDrafts(weekNumber: number, savedDays: TrainingDay[] = []) {
+  return weekdayNames.map((dayName, index) => {
+    const savedDay = savedDays.find(
+      (day) =>
+        Number(day.week_number) === weekNumber && day.day_name === dayName
+    );
+
+    return {
+      id: savedDay?.id,
+      week_number: weekNumber,
+      day_name: dayName,
+      focus: savedDay?.focus || "",
+      workout: savedDay?.workout || "",
+      coach_notes: savedDay?.coach_notes || "",
+      sort_order: index + 1,
+    };
+  });
+}
 
 const progressMetricPresets = [
   {
@@ -326,7 +342,7 @@ export default function CoachDashboardPage() {
   const [notifyAthlete, setNotifyAthlete] = useState(true);
   const [trainingDayWeekNumber, setTrainingDayWeekNumber] = useState("1");
   const [trainingDayDrafts, setTrainingDayDrafts] =
-    useState<TrainingDay[]>(weekdayDrafts);
+    useState<TrainingDay[]>(() => getWeekdayDrafts(1));
   const [metricType, setMetricType] = useState("calories_burned");
   const [metricLabel, setMetricLabel] = useState("Calories burned");
   const [metricValue, setMetricValue] = useState("");
@@ -348,6 +364,11 @@ export default function CoachDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [fileLoading, setFileLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+
+  useEffect(() => {
+    const weekNumber = Number(trainingDayWeekNumber || 1);
+    setTrainingDayDrafts(getWeekdayDrafts(weekNumber, trainingDays));
+  }, [selectedAthlete?.id, trainingDayWeekNumber, trainingDays]);
 
   const loadAthleteCounts = async () => {
     try {
