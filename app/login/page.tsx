@@ -1744,22 +1744,22 @@ export default function LoginPage() {
                                   </button>
                                 </div>
 
-                                <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                                <div className="workout-reading-panel mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
                                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-100/55">
                                     {selectedWorkoutCategoryLabel}
                                   </p>
-                                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/75">
+                                  <p className="workout-reading-text mt-3 whitespace-pre-wrap">
                                     {workoutText ||
                                       `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed for this day.`}
                                   </p>
                                 </div>
 
                                 {day.coach_notes && (
-                                  <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                                  <div className="workout-reading-panel mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/40">
                                       Coach Notes
                                     </p>
-                                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/65">
+                                    <p className="workout-reading-text mt-2 whitespace-pre-wrap text-white/72">
                                       {day.coach_notes}
                                     </p>
                                   </div>
@@ -1798,11 +1798,11 @@ export default function LoginPage() {
                                     <td className="px-4 py-4 text-white/70">
                                       {day.focus || "-"}
                                     </td>
-                                    <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                    <td className="workout-reading-text whitespace-pre-wrap px-4 py-4">
                                       {workoutText ||
                                         `No ${selectedWorkoutCategoryLabel.toLowerCase()} listed for this day.`}
                                     </td>
-                                    <td className="whitespace-pre-wrap px-4 py-4 text-white/70">
+                                    <td className="workout-reading-text whitespace-pre-wrap px-4 py-4 text-white/72">
                                       {day.coach_notes || "-"}
                                     </td>
                                     <td className="px-4 py-4">
@@ -2901,6 +2901,28 @@ export default function LoginPage() {
         </div>
 
         <style jsx global>{`
+          .workout-reading-text {
+            color: rgba(255, 255, 255, 0.86);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+              "Segoe UI", system-ui, sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 1.75;
+            overflow-wrap: anywhere;
+          }
+
+          @media (max-width: 640px) {
+            .workout-reading-panel {
+              padding: 1.125rem;
+            }
+
+            .workout-reading-text {
+              font-size: 1.0625rem;
+              line-height: 1.82;
+            }
+          }
+
           @keyframes lavaDrift {
             0% {
               transform: translate3d(-18%, -8%, 0) scale(1.08);
