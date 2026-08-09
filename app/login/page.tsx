@@ -1025,12 +1025,14 @@ export default function LoginPage() {
   // ==============================
   if (isWelcomeLoading && pendingAthlete) {
     return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white">
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#082f49] text-white">
         <video
           autoPlay
+          loop
           muted
           playsInline
-          className="absolute inset-0 h-full w-full object-cover opacity-80"
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover opacity-90"
         >
           <source src="/risingsun.mp4" type="video/mp4" />
         </video>
@@ -2972,16 +2974,19 @@ export default function LoginPage() {
   // Clicking Open Database also submits the same form.
   // ==============================
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020713] px-6 text-white">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px), radial-gradient(circle, rgba(147,197,253,0.8) 1px, transparent 1px)",
-          backgroundSize: "88px 88px, 142px 142px",
-          backgroundPosition: "0 0, 44px 55px",
-        }}
-      />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#082f49] px-6 text-white">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        className="absolute inset-0 h-full w-full object-cover opacity-80"
+      >
+        <source src="/background.mp4" type="video/mp4" />
+      </video>
+
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-sky-950/25 to-black/45" />
 
       <div className="relative w-full max-w-md rounded-[2rem] border border-sky-100/20 bg-white/5 p-8 shadow-[0_25px_90px_rgba(14,165,233,0.18)] backdrop-blur-xl">
         <p className="text-center text-xs uppercase tracking-[0.35em] text-sky-100/55">

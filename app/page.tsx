@@ -1,32 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const playVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 1;
-      videoRef.current.play();
-    }
-  };
+  useEffect(() => {
+    const video = videoRef.current;
 
-  const pauseVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  };
+    if (!video) return;
+
+    video.playbackRate = 1;
+    video.play().catch(() => {
+      return;
+    });
+  }, []);
 
   return (
-    <main
-      className="relative min-h-screen overflow-hidden text-white"
-      onMouseMove={playVideo}
-    >
+    <main className="relative min-h-screen overflow-hidden text-white">
       {/* VIDEO BACKGROUND */}
       <video
         ref={videoRef}
+        autoPlay
         muted
         loop
         playsInline
@@ -42,10 +38,7 @@ export default function Home() {
       {/* WEBSITE CONTENT */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* NAVBAR */}
-        <nav
-          onMouseEnter={pauseVideo}
-          className="flex justify-between items-center px-8 py-6 border-b border-white/10 backdrop-blur-sm"
-        >
+        <nav className="flex justify-between items-center px-8 py-6 border-b border-white/10 backdrop-blur-sm">
           <h1 className="text-2xl font-bold">TIPS WITH T</h1>
 
           <div className="flex gap-6 text-lg">
@@ -73,7 +66,6 @@ export default function Home() {
 
         {/* LOGO */}
         <div
-          onMouseEnter={pauseVideo}
           className="w-full flex justify-start px-10 pt-10"
         >
           <Image src="/logo.png" alt="Logo" width={100} height={100} />
@@ -82,20 +74,17 @@ export default function Home() {
         {/* HERO SECTION */}
         <section className="flex flex-col items-center justify-center text-center flex-1 px-6">
           <h1
-            onMouseEnter={pauseVideo}
             className="text-7xl font-bold animate-fadeIn"
           >
             TIPS WITH T
           </h1>
 
           <p
-            onMouseEnter={pauseVideo}
             className="text-2xl text-gray-100 mt-4 max-w-xl animate-fadeIn"
           >
             Private lessons, athletic development, and mentorship.
           </p>
           <div
-            onMouseEnter={pauseVideo}
             className="flex flex-col items-center gap-5 mt-10 animate-fadeIn"
           >
             <div className="flex gap-4">
@@ -125,7 +114,7 @@ export default function Home() {
 
         {/* SLOGAN */}
         <footer className="text-center pb-10">
-          <h2 onMouseEnter={pauseVideo} className="slogan-text">
+          <h2 className="slogan-text">
             FOR THE UNDERDOGS WHO WANT MORE
           </h2>
         </footer>
