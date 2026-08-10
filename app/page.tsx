@@ -5,29 +5,41 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isEntryReady, setIsEntryReady] = useState(false);
+  const [hasEntryIntroFinished, setHasEntryIntroFinished] = useState(false);
+  const [isEntryVideoMoving, setIsEntryVideoMoving] = useState(false);
+  const isEntryReady = hasEntryIntroFinished && isEntryVideoMoving;
 
   useEffect(() => {
     const video = videoRef.current;
+    const introTimer = window.setTimeout(() => {
+      setHasEntryIntroFinished(true);
+    }, 4000);
     const fallbackTimer = window.setTimeout(() => {
-      setIsEntryReady(true);
-    }, 2600);
+      setHasEntryIntroFinished(true);
+      setIsEntryVideoMoving(true);
+    }, 7000);
 
     if (!video) {
-      return () => window.clearTimeout(fallbackTimer);
+      return () => {
+        window.clearTimeout(introTimer);
+        window.clearTimeout(fallbackTimer);
+      };
     }
 
     video.playbackRate = 1;
     video
       .play()
       .then(() => {
-        setIsEntryReady(true);
+        setIsEntryVideoMoving(true);
       })
       .catch(() => {
         return;
       });
 
-    return () => window.clearTimeout(fallbackTimer);
+    return () => {
+      window.clearTimeout(introTimer);
+      window.clearTimeout(fallbackTimer);
+    };
   }, []);
 
   return (
@@ -70,8 +82,12 @@ export default function Home() {
         loop
         playsInline
         preload="auto"
-        onPlaying={() => setIsEntryReady(true)}
-        onCanPlay={() => setIsEntryReady(true)}
+        onPlaying={() => setIsEntryVideoMoving(true)}
+        onCanPlay={() => {
+          videoRef.current?.play().catch(() => {
+            return;
+          });
+        }}
         className="absolute top-0 left-0 w-full h-full object-cover"
       >
         <source src="/background.mp4" type="video/mp4" />

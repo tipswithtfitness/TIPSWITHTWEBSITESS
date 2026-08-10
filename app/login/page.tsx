@@ -513,7 +513,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const loginVideoRef = useRef<HTMLVideoElement>(null);
-  const [isEntryReady, setIsEntryReady] = useState(false);
+  const [hasEntryIntroFinished, setHasEntryIntroFinished] = useState(false);
+  const [isEntryVideoMoving, setIsEntryVideoMoving] = useState(false);
+  const isEntryReady = hasEntryIntroFinished && isEntryVideoMoving;
 
   // ==============================
   // LOAD DAILY GENERATED ATHLETE FACT
@@ -551,24 +553,34 @@ export default function LoginPage() {
     if (athlete || pendingAthlete) return;
 
     const video = loginVideoRef.current;
+    const introTimer = window.setTimeout(() => {
+      setHasEntryIntroFinished(true);
+    }, 4000);
     const fallbackTimer = window.setTimeout(() => {
-      setIsEntryReady(true);
-    }, 2600);
+      setHasEntryIntroFinished(true);
+      setIsEntryVideoMoving(true);
+    }, 7000);
 
     if (!video) {
-      return () => window.clearTimeout(fallbackTimer);
+      return () => {
+        window.clearTimeout(introTimer);
+        window.clearTimeout(fallbackTimer);
+      };
     }
 
     video
       .play()
       .then(() => {
-        setIsEntryReady(true);
+        setIsEntryVideoMoving(true);
       })
       .catch(() => {
         return;
       });
 
-    return () => window.clearTimeout(fallbackTimer);
+    return () => {
+      window.clearTimeout(introTimer);
+      window.clearTimeout(fallbackTimer);
+    };
   }, [athlete, pendingAthlete]);
 
   // ==============================
@@ -3038,8 +3050,12 @@ export default function LoginPage() {
         loop
         playsInline
         preload="auto"
-        onPlaying={() => setIsEntryReady(true)}
-        onCanPlay={() => setIsEntryReady(true)}
+        onPlaying={() => setIsEntryVideoMoving(true)}
+        onCanPlay={() => {
+          loginVideoRef.current?.play().catch(() => {
+            return;
+          });
+        }}
         className="absolute inset-0 h-full w-full object-cover opacity-80"
       >
         <source src="/background.mp4" type="video/mp4" />
